@@ -626,7 +626,7 @@
                         },
                         tasks: [], dailyQuests: [], shop: [], skills: {}, unlockedAchievements: {},
                         completedTasks: [], customDailies: [], unlockedJourneyChapters: {},
-                        merchant: { dailyDealId: null, weeklyDealId: null, lastStockDate: null },
+                        merchant: { dailyDealId: null, weeklyDealId: null, lastStockDate: null, lastStockWeekId: null },
                         lastDailyQuestDate: null, weeklyQuest: null, lastWeeklyQuestDate: null,
                         editing: { type: null, id: null },
                         settings: { theme: 'dark', sound: true },
@@ -1334,44 +1334,38 @@
                 generateWeeklyQuest() {
                     const currentWeekId = this.getWeekId(new Date());
 
-                    // If it's the same week AND a quest already exists, just check progress and exit.
-                    if (this.state.lastWeeklyQuestDate === currentWeekId && this.state.weeklyQuest) {
+                    if (this.state.lastWeeklyQuestDate !== currentWeekId || !this.state.weeklyQuest) {
+                        if (this.state.lastWeeklyQuestDate !== currentWeekId) {
+                            this.state.player.stats.questsCompletedThisWeek = 0;
+                            this.state.player.stats.goldEarnedThisWeek = 0;
+                            this.state.player.stats.skillsLeveledThisWeek = 0;
+                            this.state.uiSettings.weeklyFocusSkill = null;
+                        }
+                        
+                        const randomIndex = Math.floor(Math.random() * this.config.weeklyQuestPool.length);
+                        const newQuestTemplate = this.config.weeklyQuestPool[randomIndex];
+                        this.state.weeklyQuest = { id: newQuestTemplate.id, completed: false };
+                        this.state.lastWeeklyQuestDate = currentWeekId;
+                    } else {
                         this.checkWeeklyQuestProgress();
-                        return;
                     }
-
-                    // If we reach here, it's either a new week OR the same week but the quest is missing.
-                    // In either case, we generate a new quest.
-
-                    // Only reset weekly stats if it's actually a new week.
-                    if (this.state.lastWeeklyQuestDate !== currentWeekId) {
-                        this.state.player.stats.questsCompletedThisWeek = 0;
-                        this.state.player.stats.goldEarnedThisWeek = 0;
-                        this.state.player.stats.skillsLeveledThisWeek = 0;
-                        this.state.uiSettings.weeklyFocusSkill = null; // Reset weekly focus
-                    }
-                    
-                    const randomIndex = Math.floor(Math.random() * this.config.weeklyQuestPool.length);
-                    const newQuestTemplate = this.config.weeklyQuestPool[randomIndex];
-                    this.state.weeklyQuest = { id: newQuestTemplate.id, completed: false };
-                    this.state.lastWeeklyQuestDate = currentWeekId;
                 },
 
                 generateMerchantDeals() {
                     const today = new Date().toDateString();
-                    if (this.state.merchant.lastStockDate === today) return;
+                    if (this.state.merchant.lastStockDate === today && this.state.merchant.dailyDealId) return;
 
                     const allItems = this.config.travelingMerchantItems;
                     const consumables = allItems.filter(i => i.duration !== Infinity);
                     const permanent = allItems.filter(i => i.duration === Infinity);
 
-                    // New daily deal
                     const dailyCandidates = consumables.filter(i => i.id !== this.state.merchant.dailyDealId);
-                    this.state.merchant.dailyDealId = dailyCandidates[Math.floor(Math.random() * dailyCandidates.length)].id;
-                    
-                    // New weekly deal (if it's a new week)
+                    if (dailyCandidates.length > 0) {
+                        this.state.merchant.dailyDealId = dailyCandidates[Math.floor(Math.random() * dailyCandidates.length)].id;
+                    }
+
                     const currentWeekId = this.getWeekId(new Date());
-                    if (this.state.merchant.lastStockWeekId !== currentWeekId) {
+                    if (this.state.merchant.lastStockWeekId !== currentWeekId || !this.state.merchant.weeklyDealId) {
                         const weeklyCandidates = permanent.filter(i => i.id !== this.state.merchant.weeklyDealId);
                          if (weeklyCandidates.length > 0) {
                             this.state.merchant.weeklyDealId = weeklyCandidates[Math.floor(Math.random() * weeklyCandidates.length)].id;
@@ -2244,7 +2238,7 @@
                     }
                 },
 
-                 handleAvatarSelect(avatar) {
+                handleAvatarSelect(avatar) {
                     this.state.character.avatar = avatar;
                     this.state.character.class = this.config.classBonuses[avatar] ? avatar : this.state.character.class;
                     this.render();

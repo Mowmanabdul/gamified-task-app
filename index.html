@@ -372,14 +372,7 @@
                         <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition duration-300 transform hover:scale-105">Embark on Quest</button>
                     </form>
                 </div>
-                <div id="weekly-quest-card" class="card p-6 border-2"></div>
-                 <div class="card p-6 min-h-[200px]">
-                    <div class="flex justify-between items-center card-header pb-3 mb-4">
-                        <h2 class="text-2xl font-semibold">Daily Quests</h2>
-                        <button id="manage-dailies-btn" class="text-sm bg-gray-600 hover:bg-gray-700 px-3 py-1 rounded-md">Manage</button>
-                    </div>
-                    <div id="daily-quest-list" class="space-y-3 scrollable-content pr-2 max-h-72 overflow-y-auto"></div>
-                </div>
+                <div id="bounty-board-card" class="card p-6 min-h-[200px]"></div>
                 <div class="card p-6 min-h-[200px]">
                     <div class="flex justify-between items-center card-header pb-3">
                         <h2 class="text-2xl font-semibold">Active Quests</h2>
@@ -412,7 +405,7 @@
                 <div class="card p-6 flex flex-col h-full min-h-[500px]">
                     <h2 class="text-2xl font-semibold mb-4 card-header pb-3">Freedom Shop</h2>
                     
-                    <div id="traveling-merchant-section"></div>
+                    <div id="black-market-section"></div>
 
                     <h3 class="text-lg font-semibold mb-2 mt-4 border-t border-themed pt-4">Your Permanent Rewards</h3>
                     <div id="shop-list" class="space-y-3 mb-6 scrollable-content pr-2 max-h-48 overflow-y-auto"></div>
@@ -459,7 +452,6 @@
     <div id="editModal" class="modal fixed inset-0 bg-black/75 items-center justify-center z-50 p-4"></div>
     <div id="questLogModal" class="modal fixed inset-0 bg-black/75 items-center justify-center z-50 p-4"></div>
     <div id="settingsModal" class="modal fixed inset-0 bg-black/75 items-center justify-center z-50 p-4"></div>
-    <div id="manageDailiesModal" class="modal fixed inset-0 bg-black/75 items-center justify-center z-50 p-4"></div>
     <div id="avatarModal" class="modal fixed inset-0 bg-black/75 items-center justify-center z-50 p-4"></div>
     <div id="toast-container" class="fixed bottom-5 right-5 space-y-2 z-50"></div>
 
@@ -483,7 +475,6 @@
                 categoryChart: null,
                 skillRadarChart: null,
                 timeOfDayChart: null,
-                weeklyTimerInterval: null,
                 saveTimeout: null,
                 tempSubtasks: [],
                 audioContextStarted: false,
@@ -589,20 +580,26 @@
                             archer: { type: 'crit', chance: 0.05, multiplier: 2, description: '5% chance to double quest rewards.' },
                         },
                         achievements: [ { id: 'quests1', name: 'Quest Novice', desc: 'Complete 10 quests.', condition: state => state.player.stats.questsCompleted >= 10 }, { id: 'quests2', name: 'Quest Adept', desc: 'Complete 50 quests.', condition: state => state.player.stats.questsCompleted >= 50 }, { id: 'gold1', name: 'Gold Hoarder', desc: 'Earn 1,000 total gold.', condition: state => state.player.stats.totalGoldEarned >= 1000 }, { id: 'level1', name: 'Level Up!', desc: 'Reach player level 5.', condition: state => state.player.level >= 5 }, { id: 'streak1', name: 'On a Roll', desc: 'Maintain a 3-day streak.', condition: state => state.player.streak >= 3 }, ],
-                        dailyQuestPool: [ { name: 'Read for 15 minutes', category: 'Learning', xp: 20 }, { name: 'Go for a 10-minute walk', category: 'Fitness', xp: 25 }, { name: 'Tidy one area for 5 minutes', category: 'Chores', xp: 15 }, ],
-                        weeklyQuestPool: [ { id: 'wq1', name: 'Complete 15 Quests', xp: 500, target: 15, condition: state => state.player.stats.questsCompletedThisWeek >= 15 }, { id: 'wq2', name: 'Earn 500 Gold', xp: 400, target: 500, condition: state => state.player.stats.goldEarnedThisWeek >= 500 }, ],
                         heroJourney: [
                             { id: 'hj1', name: 'The First Step', desc: 'Reach Player Level 5.', condition: state => state.player.level >= 5, reward: { type: 'passive_gold_bonus', value: 0.01 }, rewardDesc: "+1% to all Gold gains." },
                             { id: 'hj2', name: 'Master of the Mundane', desc: "Reach Level 10 in the 'Chores' skill.", condition: state => state.skills['Chores'] && state.skills['Chores'].level >= 10, reward: { type: 'passive_daily_xp_bonus', value: 0.1 }, rewardDesc: "Daily quests are worth 10% more XP." },
                             { id: 'hj3', name: "The Dragon's Hoard", desc: 'Earn a total of 2,500 Gold.', condition: state => state.player.stats.totalGoldEarned >= 2500, reward: { type: 'avatar_unlock', value: 'gold_dragon' }, rewardDesc: "Unlock the Gold Dragon avatar." },
                             { id: 'hj4', name: "The Sage's Wisdom", desc: 'Complete 100 quests.', condition: state => state.player.stats.questsCompleted >= 100, reward: { type: 'passive_xp_bonus', value: 0.02 }, rewardDesc: "+2% to all XP gains." },
                         ],
-                        travelingMerchantItems: [
-                            { id: 'item1', name: 'Potion of Swift Learning', desc: "+25% XP from 'Learning' quests for 24 hours.", cost: 150, duration: 24, effect: { type: 'xp_boost', category: 'Learning', value: 0.25 }, icon: '🧪' },
-                            { id: 'item2', name: 'Elixir of Strength', desc: "+25% XP from 'Fitness' quests for 24 hours.", cost: 150, duration: 24, effect: { type: 'xp_boost', category: 'Fitness', value: 0.25 }, icon: '🧪' },
-                            { id: 'item3', name: 'Draught of Creativity', desc: "+25% XP from 'Creative' quests for 24 hours.", cost: 150, duration: 24, effect: { type: 'xp_boost', category: 'Creative', value: 0.25 }, icon: '🧪' },
-                            { id: 'item4', name: 'Amulet of Prosperity', desc: 'Permanently gain +1 Gold from every quest.', cost: 1000, duration: Infinity, effect: { type: 'gold_flat_bonus', value: 1 }, icon: '💎' },
-                            { id: 'item5', name: 'Scroll of Fortune', desc: '+10% Gold from all quests for 48 hours.', cost: 200, duration: 48, effect: { type: 'gold_boost', value: 0.1 }, icon: '📜' }
+                        bountyPool: [
+                            { id: 'b1', name: 'Fitness Fanatic', desc: "Complete 3 'Fitness' quests today.", reward: { xp: 100, gold: 50 }, condition: (state) => state.completedTasks.filter(t => t.category === 'Fitness' && new Date(t.completedAt).toDateString() === new Date().toDateString()).length >= 3 },
+                            { id: 'b2', name: 'Learning Spree', desc: "Complete 3 'Learning' quests today.", reward: { xp: 100, gold: 50 }, condition: (state) => state.completedTasks.filter(t => t.category === 'Learning' && new Date(t.completedAt).toDateString() === new Date().toDateString()).length >= 3 },
+                            { id: 'b3', name: 'Productive Power Hour', desc: 'Complete 2 quests in one hour.', reward: { xp: 75, gold: 25 }, condition: (state) => {
+                                const recent = state.completedTasks.filter(t => (Date.now() - new Date(t.completedAt).getTime()) < 3600000);
+                                return recent.length >= 2;
+                            }},
+                            { id: 'b4', name: 'High Roller', desc: 'Complete a quest worth over 200 XP.', reward: { xp: 50, gold: 50 }, condition: (state) => state.completedTasks.some(t => t.xp >= 200 && new Date(t.completedAt).toDateString() === new Date().toDateString()) },
+                            { id: 'b5', name: 'Streak Keeper', desc: 'Maintain your daily streak.', reward: { xp: 50, gold: 20 }, condition: (state) => state.player.streak > 1 && state.player.lastCompletedDate === new Date().toDateString() }
+                        ],
+                        blackMarketItems: [
+                            { id: 'item1', name: 'Potion of Swift Learning', desc: "+25% XP from 'Learning' quests for 24 hours.", cost: 250, duration: 24, effect: { type: 'xp_boost', category: 'Learning', value: 0.25 }, icon: '🧪' },
+                            { id: 'item2', name: 'Elixir of Strength', desc: "+25% XP from 'Fitness' quests for 24 hours.", cost: 250, duration: 24, effect: { type: 'xp_boost', category: 'Fitness', value: 0.25 }, icon: '🧪' },
+                            { id: 'item4', name: 'Amulet of Prosperity', desc: 'Permanently gain +1 Gold from every quest.', cost: 1500, duration: Infinity, effect: { type: 'gold_flat_bonus', value: 1 }, icon: '💎' },
                         ],
                         avatars: {
                             knight: `data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIGZpbGw9IiMxRjI5MzkiLz48cmVjdCB4PSI4IiB5PSIyIiB3aWR0aD0iOCIgaGVpZ2h0PSIyIiBmaWxsPSIjQzhDNUM2Ii8+PHJlY3QgeD0iOCIgeT0iNCIgd2lkdGg9IjgiIGhlaWdodD0iNiIgZmlsbD0iIzUzNUU1QiIvPjxyZWN0IHg9IjEwIiB5PSI2IiB3aWR0aD0iNCIgaGVpZ2h0PSIyIiBmaWxsPSIjM0Q0NTUwIi8+PHJlY3QgeD0iNiIgeT0iMTAiIHdpZHRoPSIxMiIgaGVpZ2h0PSI0IiBmaWxsPSIjNTM1RUY1Ii8+PHJlY3QgeD0iNiIgeT0iMTQiIHdpZHRoPSIzIiBoZWlnaHQ9IjYiIGZpbGw9IiM1MzVFRjUiLz48cmVjdCB4PSIxNSIgeT0iMTQiIHdpZHRoPSIzIiBoZWlnaHQ9IjYiIGZpbGw9IiM1MzVFRjUiLz48cmVjdCB4PSI5IiB5PSIxNCIgd2lkdGg9IjYiIGhlaWdodD0iNiIgZmlsbD0iIzQ2NTE1OSIvPjxyZWN0IHg9IjYiIHk9IjIwIiB3aWR0aD0iMyIgaGVpZ2h0PSIyIiBmaWxsPSIjM0Q0NTUwIi8+PHJlY3QgeD0iMTUiIHk9IjIwIiB3aWR0aD0iMyIgaGVpZ2h0PSIyIiBmaWxsPSIjM0Q0NTUwIi8+PC9zdmc+`,
@@ -620,32 +617,29 @@
                             level: 1, xp: 0, gold: 0, streak: 0, lastCompletedDate: null, activeBuffs: [],
                             stats: { 
                                 questsCompleted: 0, totalGoldEarned: 0, totalXpGained: 0, 
-                                questsCompletedThisWeek: 0, goldEarnedThisWeek: 0, skillsLeveledThisWeek: 0,
-                                totalGoldSpent: 0, rewardsClaimed: 0,
+                                questsCompletedToday: 0, goldEarnedToday: 0
                             } 
                         },
-                        tasks: [], dailyQuests: [], shop: [], skills: {}, unlockedAchievements: {},
-                        completedTasks: [], customDailies: [], unlockedJourneyChapters: {},
-                        merchant: { dailyDealId: null, weeklyDealId: null, lastStockDate: null, lastStockWeekId: null },
-                        lastDailyQuestDate: null, weeklyQuest: null, lastWeeklyQuestDate: null,
+                        tasks: [], shop: [], skills: {}, unlockedAchievements: {},
+                        completedTasks: [], unlockedJourneyChapters: {},
+                        bounties: { active: [], completedToday: {}, lastDate: null },
                         editing: { type: null, id: null },
                         settings: { theme: 'dark', sound: true },
                         uiSettings: {
                             sortBy: 'id-desc',
                             filterCategory: 'all',
-                            activeMobileTab: 'quests',
-                            needsDailyQuestClaim: false,
-                            weeklyFocusSkill: null,
+                            activeMobileTab: 'quests'
                         }
                     }));
                 },
 
                 cacheDOM() {
                     this.dom = {
-                        playerXpBar: document.getElementById('player-xp-bar'), playerXpText: document.getElementById('player-xp-text'), playerGold: document.getElementById('player-gold'), playerStreak: document.getElementById('player-streak'), addTaskForm: document.getElementById('add-task-form'), addRewardForm: document.getElementById('add-reward-form'), xpSlider: document.getElementById('task-xp'), xpSliderValue: document.getElementById('task-xp-value'), skillSuggestions: document.getElementById('skill-suggestions'), taskList: document.getElementById('task-list'), dailyQuestList: document.getElementById('daily-quest-list'), weeklyQuestCard: document.getElementById('weekly-quest-card'), shopList: document.getElementById('shop-list'), skillsList: document.getElementById('skills-list'), heroJourneyList: document.getElementById('hero-journey-list'), playerProfileStats: document.getElementById('player-profile-stats'), achievementsList: document.getElementById('achievements-list'), toastContainer: document.getElementById('toast-container'), confirmationModal: document.getElementById('confirmationModal'), editModal: document.getElementById('editModal'), questLogModal: document.getElementById('questLogModal'), questLogBtn: document.getElementById('quest-log-btn'), statsChartCanvas: document.getElementById('stats-chart'), settingsBtn: document.getElementById('settings-btn'), settingsModal: document.getElementById('settingsModal'), manageDailiesBtn: document.getElementById('manage-dailies-btn'), manageDailiesModal: document.getElementById('manageDailiesModal'), avatarDisplay: document.getElementById('avatar-display'), characterNameInput: document.getElementById('character-name'), characterClass: document.getElementById('character-class'), playerLevel: document.getElementById('player-level'),
+                        playerXpBar: document.getElementById('player-xp-bar'), playerXpText: document.getElementById('player-xp-text'), playerGold: document.getElementById('player-gold'), playerStreak: document.getElementById('player-streak'), addTaskForm: document.getElementById('add-task-form'), addRewardForm: document.getElementById('add-reward-form'), xpSlider: document.getElementById('task-xp'), xpSliderValue: document.getElementById('task-xp-value'), skillSuggestions: document.getElementById('skill-suggestions'), taskList: document.getElementById('task-list'), shopList: document.getElementById('shop-list'), skillsList: document.getElementById('skills-list'), heroJourneyList: document.getElementById('hero-journey-list'), playerProfileStats: document.getElementById('player-profile-stats'), achievementsList: document.getElementById('achievements-list'), toastContainer: document.getElementById('toast-container'), confirmationModal: document.getElementById('confirmationModal'), editModal: document.getElementById('editModal'), questLogModal: document.getElementById('questLogModal'), questLogBtn: document.getElementById('quest-log-btn'), statsChartCanvas: document.getElementById('stats-chart'), settingsBtn: document.getElementById('settings-btn'), settingsModal: document.getElementById('settingsModal'), avatarDisplay: document.getElementById('avatar-display'), characterNameInput: document.getElementById('character-name'), characterClass: document.getElementById('character-class'), playerLevel: document.getElementById('player-level'),
                         playerCard: document.getElementById('player-card'),
                         activeBuffsContainer: document.getElementById('active-buffs-container'),
-                        travelingMerchantSection: document.getElementById('traveling-merchant-section'),
+                        blackMarketSection: document.getElementById('black-market-section'),
+                        bountyBoardCard: document.getElementById('bounty-board-card'),
                         weeklyFocusText: document.getElementById('weekly-focus-text'),
                         addSubtaskBtn: document.getElementById('add-subtask-btn'), subtaskNameInput: document.getElementById('subtask-name'), subtasksContainer: document.getElementById('subtasks-container'),
                         
@@ -686,22 +680,16 @@
                             this.handleSetFocus(focusButton.dataset.skill);
                         }
                     });
-                    this.dom.dailyQuestList.addEventListener('click', e => {
-                        this.handleGenericListClick(e);
-                        if(e.target.closest('button[data-action="claim-dailies"]')) {
-                            this.handleClaimDailies();
-                        }
-                    });
+                    
                     this.dom.shopList.addEventListener('click', e => this.handleGenericListClick(e));
-                    this.dom.travelingMerchantSection.addEventListener('click', e => {
-                        const buyButton = e.target.closest('button[data-action="buy-merchant-item"]');
-                        if(buyButton) this.buyMerchantItem(buyButton.dataset.id);
+                    this.dom.blackMarketSection.addEventListener('click', e => {
+                        const buyButton = e.target.closest('button[data-action="buy-black-market-item"]');
+                        if(buyButton) this.buyBlackMarketItem(buyButton.dataset.id);
                     });
 
                     // Global clicks (modals, etc. - delegated)
                     document.body.addEventListener('click', e => {
                         if (e.target.closest('#settingsCloseBtn')) this.hideModal('settingsModal');
-                        if (e.target.closest('#dailiesCloseBtn')) this.hideModal('manageDailiesModal');
                         if (e.target.closest('#avatarCloseBtn')) this.hideModal('avatarModal');
                         if (e.target.closest('#questLogCloseBtn')) this.hideModal('questLogModal');
                         if (e.target.closest('#editCancelBtn')) this.hideModal('editModal');
@@ -712,7 +700,6 @@
                     });
                      document.body.addEventListener('submit', e => {
                         if (e.target.id === 'edit-form') this.handleEditSubmit(e);
-                        if (e.target.id === 'add-daily-form') this.handleAddCustomDaily(e);
                     });
 
 
@@ -725,7 +712,6 @@
 
                     // Buttons
                     this.dom.settingsBtn.addEventListener('click', () => this.showModal('settingsModal'));
-                    this.dom.manageDailiesBtn.addEventListener('click', () => this.showModal('manageDailiesModal'));
                     this.dom.questLogBtn.addEventListener('click', () => this.showModal('questLogModal'));
                     this.dom.avatarDisplay.addEventListener('click', () => this.showModal('avatarModal'));
                     this.dom.addSubtaskBtn.addEventListener('click', () => this.handleAddSubtask());
@@ -750,16 +736,11 @@
                     this.unsubscribe = onSnapshot(this.docRef, (docSnap) => {
                         if (docSnap.exists()) {
                             this.updateLocalState(docSnap.data());
-                            this.generateDailyQuests(); 
-                            this.generateWeeklyQuest();
-                            this.generateMerchantDeals();
+                            this.generateBounties();
                         } else {
                             console.log("No user data found, creating new document.");
                             this.state = this.getDefaultState();
-                            this.handleClaimDailies(); 
-                            this.state.uiSettings.needsDailyQuestClaim = false; 
-                            this.generateWeeklyQuest();
-                            this.generateMerchantDeals();
+                            this.generateBounties();
                             this.saveStateToFirestore(); 
                         }
                         this.applyTheme();
@@ -784,7 +765,7 @@
                             activeBuffs: firestoreData.player && firestoreData.player.activeBuffs ? firestoreData.player.activeBuffs : [],
                             stats: { ...defaultState.player.stats, ...(firestoreData.player ? (firestoreData.player.stats || {}) : {}) }
                         },
-                        merchant: { ...defaultState.merchant, ...(firestoreData.merchant || {}) },
+                        bounties: { ...defaultState.bounties, ...(firestoreData.bounties || {}) },
                         settings: { ...defaultState.settings, ...(firestoreData.settings || {}) },
                         uiSettings: { ...defaultState.uiSettings, ...(firestoreData.uiSettings || {}) },
                         unlockedJourneyChapters: { ...defaultState.unlockedJourneyChapters, ...(firestoreData.unlockedJourneyChapters || {}) }
@@ -816,15 +797,14 @@
                 },
 
                 // --- Core Game Logic ---
-                completeTask(taskId, element, isDaily = false) {
-                    const taskList = isDaily ? this.state.dailyQuests : this.state.tasks;
-                    const taskIndex = taskList.findIndex(t => t.id === taskId);
+                completeTask(taskId, element) {
+                    const taskIndex = this.state.tasks.findIndex(t => t.id === taskId);
                     if (taskIndex === -1) return;
                     
-                    const task = { ...taskList[taskIndex] };
+                    const task = { ...this.state.tasks[taskIndex] };
 
                     // --- Reward Calculation ---
-                    const { finalXp, goldGained, rewardsLogHtml } = this.calculateRewards(task, isDaily);
+                    const { finalXp, goldGained, rewardsLogHtml } = this.calculateRewards(task);
 
                     // Animate base rewards
                     this.animateRewardGain(element, `+${Math.round(finalXp)} XP`, 'xp');
@@ -836,7 +816,7 @@
                     
                     // --- Animation & State Update Logic ---
                     const isRecurring = task.recurrence && task.recurrence.type !== 'none';
-                    if (!isRecurring && !isDaily) {
+                    if (!isRecurring) {
                         element.classList.add('anim-fade-out');
                     } else {
                         element.classList.add('quest-complete-flash');
@@ -846,20 +826,20 @@
                     }
 
                     const onComplete = () => {
-                        this.applyRewards(task, finalXp, goldGained, rewardsLogHtml, isDaily);
+                        this.applyRewards(task, finalXp, goldGained, rewardsLogHtml);
                         const allRewardsHtml = this.processPostCompletion(task, finalXp, goldGained, rewardsLogHtml);
                         this.showToast(...allRewardsHtml);
                         this.render();
                     };
 
-                    if (!isRecurring && !isDaily) {
+                    if (!isRecurring) {
                         element.addEventListener('animationend', onComplete, { once: true });
                     } else {
                         onComplete(); // No animation for removal, but flash still happens
                     }
                 },
                 
-                calculateRewards(task, isDaily = false) {
+                calculateRewards(task) {
                     let finalXp = task.xp;
                     let goldGained = this.config.goldForTask(finalXp);
                     let rewardsLogHtml = '';
@@ -867,7 +847,7 @@
                     // --- Check and Apply Active Buffs ---
                     this.checkActiveBuffs(); // Remove expired buffs
                     this.state.player.activeBuffs.forEach(buff => {
-                        const item = this.config.travelingMerchantItems.find(i => i.id === buff.id);
+                        const item = this.config.blackMarketItems.find(i => i.id === buff.id);
                         if (!item) return;
 
                         if (item.effect.type === 'xp_boost' && item.effect.category === task.category) {
@@ -884,14 +864,6 @@
                             goldGained += item.effect.value;
                         }
                     });
-
-                    // --- Apply Weekly Focus Bonus ---
-                    const focusSkill = this.state.uiSettings.weeklyFocusSkill;
-                    if (focusSkill && task.category === focusSkill) {
-                        const bonusXp = Math.round(finalXp * 0.1);
-                        finalXp += bonusXp;
-                        rewardsLogHtml += `<p><span class="text-yellow-400 font-semibold">+${bonusXp} XP (Focus Bonus!)</span></p>`;
-                    }
 
                     const { class: playerClass } = this.state.character;
                     const classBonus = this.config.classBonuses[playerClass];
@@ -917,9 +889,6 @@
                     if (this.state.unlockedJourneyChapters[journey[0].id]) { // +1% Gold
                          goldGained *= (1 + journey[0].reward.value);
                     }
-                    if (isDaily && this.state.unlockedJourneyChapters[journey[1].id]) { // +10% Daily XP
-                         finalXp *= (1 + journey[1].reward.value);
-                    }
                     if (this.state.unlockedJourneyChapters[journey[3].id]) { // +2% XP
                          finalXp *= (1 + journey[3].reward.value);
                     }
@@ -941,12 +910,9 @@
                     return { finalXp, goldGained, rewardsLogHtml };
                 },
 
-                applyRewards(task, finalXp, goldGained, rewardsLogHtml, isDaily) {
+                applyRewards(task, finalXp, goldGained, rewardsLogHtml) {
                     const isRecurring = task.recurrence && task.recurrence.type !== 'none';
-                    if (isDaily) {
-                        const dailyInState = this.state.dailyQuests.find(q => q.id === task.id);
-                        if (dailyInState) dailyInState.completed = true;
-                    } else if (isRecurring) {
+                    if (isRecurring) {
                         const taskInState = this.state.tasks.find(t => t.id === task.id);
                         if (taskInState) taskInState.lastCompleted = new Date().toISOString().split('T')[0];
                     } else {
@@ -964,8 +930,8 @@
                     stats.questsCompleted++;
                     stats.totalGoldEarned += goldGained;
                     stats.totalXpGained += finalXp;
-                    stats.questsCompletedThisWeek++;
-                    stats.goldEarnedThisWeek += goldGained;
+                    stats.questsCompletedToday++;
+                    stats.goldEarnedToday += goldGained;
                 },
 
                 processPostCompletion(task, finalXp, goldGained, rewardsLogHtml) {
@@ -993,7 +959,7 @@
 
                     this.checkAchievements();
                     this.checkHeroJourney();
-                    this.checkWeeklyQuestProgress();
+                    this.checkBounties();
 
                     return [toastTitle, fullRewardsHtml, toastType];
                 },
@@ -1032,7 +998,6 @@
                         requiredXp = this.config.xpForLevel(skill.level);
                     }
                     if (leveledUp) {
-                        this.state.player.stats.skillsLeveledThisWeek++;
                         return { category: category, newLevel: skill.level };
                     }
                     return null;
@@ -1086,8 +1051,7 @@
                         switch(action) {
                             case 'complete-task': {
                                 const taskEl = button.closest('[data-task-id]');
-                                const isDaily = taskEl.closest('#daily-quest-list') !== null;
-                                this.completeTask(Number(id), taskEl, isDaily);
+                                this.completeTask(Number(id), taskEl);
                                 break;
                             }
                             case 'delete-task': {
@@ -1150,13 +1114,12 @@
                 async render() {
                     this.renderPlayerStats();
                     this.renderTasks();
-                    this.renderDailyQuests();
-                    this.renderWeeklyQuest();
                     this.renderHeroJourney();
                     this.renderSkills();
                     this.renderShop();
                     this.renderPlayerProfile();
                     this.renderAchievements();
+                    this.renderBountyBoard();
                     this.renderStatsChart();
                     this.renderCategoryDonutChart();
                     this.renderSkillRadarChart();
@@ -1175,13 +1138,6 @@
                     this.dom.playerXpBar.style.width = `${(xp / requiredXp) * 100}%`;
                     this.dom.playerGold.textContent = `${Math.round(gold)} G`;
                     this.dom.playerStreak.textContent = `🔥 ${streak}`;
-                    
-                    const focusSkill = this.state.uiSettings.weeklyFocusSkill;
-                    if (focusSkill) {
-                        this.dom.weeklyFocusText.innerHTML = `Weekly Focus: <span class="underline">${focusSkill}</span>`;
-                    } else {
-                        this.dom.weeklyFocusText.innerHTML = '';
-                    }
                 },
                 
                 renderTasks() { 
@@ -1210,34 +1166,15 @@
                         }
                     });
 
-                    this.renderQuestList(this.dom.taskList, tasksToDisplay, false); 
+                    this.renderQuestList(this.dom.taskList, tasksToDisplay); 
                 },
 
-                renderDailyQuests() {
-                    if (this.state.uiSettings.needsDailyQuestClaim) {
-                        this.dom.dailyQuestList.innerHTML = `
-                            <div class="empty-state-container text-center p-4 anim-fade-in">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mb-4 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                                <h3 class="text-xl font-semibold mb-2">A New Day Awaits!</h3>
-                                <p class="text-text-secondary mb-4">Your previous daily quests have concluded. Embark on a new set of adventures!</p>
-                                <button data-action="claim-dailies" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition duration-300 transform hover:scale-105">
-                                    Claim Today's Quests
-                                </button>
-                            </div>
-                        `;
-                    } else {
-                        this.renderQuestList(this.dom.dailyQuestList, this.state.dailyQuests, true);
-                    }
-                },
-
-                renderQuestList(container, list, isDaily) {
+                renderQuestList(container, list) {
                     if (list.length === 0) {
                         const emptyState = `<div class="empty-state-container text-sm text-gray-400">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
                             <h3 class="font-semibold mt-2">No Quests Here</h3>
-                            <p class="mt-1">${isDaily ? "Your daily quests await tomorrow's dawn." : "Add a new quest to begin your adventure."}</p>
+                            <p class="mt-1">Add a new quest to begin your adventure.</p>
                         </div>`;
                         container.innerHTML = emptyState;
                         return;
@@ -1245,7 +1182,7 @@
 
                     container.innerHTML = list.map(task => { 
                         const isRecurring = !!task.recurrence && task.recurrence.type !== 'none';
-                        const isCompletedToday = isDaily ? task.completed : (isRecurring && task.lastCompleted === new Date().toISOString().split('T')[0]);
+                        const isCompletedToday = (isRecurring && task.lastCompleted === new Date().toISOString().split('T')[0]);
                         
                         const subtasksHtml = (task.subtasks && task.subtasks.length > 0) ? `<div class="mt-2 space-y-1 pl-4">${task.subtasks.map((sub, i) => `
                             <div class="flex items-center text-sm">
@@ -1256,7 +1193,7 @@
                         const canComplete = !task.subtasks || task.subtasks.length === 0 || task.subtasks.every(st => st.completed);
                         
                         return `
-                        <div data-task-id="${task.id}" class="bg-themed p-3 rounded-lg flex flex-col items-stretch ${task.isNew ? 'anim-fade-in' : ''} ${isCompletedToday ? 'opacity-50' : ''} ${!isDaily ? `priority-${task.priority || 'medium'}` : ''}">
+                        <div data-task-id="${task.id}" class="bg-themed p-3 rounded-lg flex flex-col items-stretch ${task.isNew ? 'anim-fade-in' : ''} ${isCompletedToday ? 'opacity-50' : ''} priority-${task.priority || 'medium'}">
                             <div class="flex justify-between items-start">
                                 <div>
                                     <p class="font-semibold ${isCompletedToday ? 'line-through' : ''}">${task.name}</p>
@@ -1265,9 +1202,8 @@
                                     </div>
                                 </div>
                                 <div class="flex gap-1 flex-shrink-0 pl-2">
-                                    ${!isDaily ? `
                                     <button data-id="${task.id}" data-action="edit-task" class="p-2 rounded-full hover:bg-blue-500/20"><svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="pointer-events:none;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L15.232 5.232z"></path></svg></button>
-                                    <button data-id="${task.id}" data-action="delete-task" class="p-2 rounded-full hover:bg-red-500/20"><svg class="w-4 h-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="pointer-events:none;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>` : ''}
+                                    <button data-id="${task.id}" data-action="delete-task" class="p-2 rounded-full hover:bg-red-500/20"><svg class="w-4 h-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="pointer-events:none;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
                                     <button data-id="${task.id}" data-action="complete-task" class="bg-green-600 hover:bg-green-700 text-white font-bold p-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed" ${isCompletedToday || !canComplete ? 'disabled' : ''}>
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="pointer-events:none;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
                                     </button>
@@ -1300,102 +1236,33 @@
                     return { newStreak: this.state.player.streak, bonusXP: streakBonusXP, bonusGold: streakBonusGold };
                 },
                 
-                generateDailyQuests() {
+                generateBounties() {
                     const today = new Date().toDateString();
-                    if (this.state.lastDailyQuestDate === today) {
-                        // It's the same day. If quests are empty AND we are not in a 'claim' state,
-                        // it's an error/inconsistent state. Let's force a claim to fix it.
-                        if (!this.state.dailyQuests || (this.state.dailyQuests.length === 0 && !this.state.uiSettings.needsDailyQuestClaim)) {
-                             this.state.uiSettings.needsDailyQuestClaim = true;
+                    if (this.state.bounties.lastDate === today) return;
+
+                    // It's a new day, reset daily stats and pick new bounties
+                    this.state.player.stats.questsCompletedToday = 0;
+                    this.state.player.stats.goldEarnedToday = 0;
+                    this.state.bounties.lastDate = today;
+                    this.state.bounties.completedToday = {};
+                    
+                    const shuffled = this.config.bountyPool.sort(() => 0.5 - Math.random());
+                    this.state.bounties.active = shuffled.slice(0, 2).map(b => b.id);
+                },
+
+                checkBounties() {
+                    this.state.bounties.active.forEach(bountyId => {
+                        if (this.state.bounties.completedToday[bountyId]) return;
+
+                        const bounty = this.config.bountyPool.find(b => b.id === bountyId);
+                        if (bounty && bounty.condition(this.state)) {
+                            this.state.player.xp += bounty.reward.xp;
+                            this.state.player.gold += bounty.reward.gold;
+                            this.state.bounties.completedToday[bountyId] = true;
+                            this.showToast("💰 Bounty Complete!", `${bounty.name}<br>+${bounty.reward.xp} XP, +${bounty.reward.gold} G`, 'levelup');
+                            this.audio.playAchievement();
                         }
-                        return; // Otherwise, do nothing for the same day.
-                    }
-
-                    // It's a new day, so trigger a claim.
-                    this.state.lastDailyQuestDate = today;
-                    this.state.dailyQuests = [];
-                    this.state.uiSettings.needsDailyQuestClaim = true;
-                },
-
-                handleClaimDailies() {
-                    const pool = [...this.config.dailyQuestPool, ...this.state.customDailies];
-                    const shuffled = pool.sort(() => 0.5 - Math.random());
-                    const newQuests = shuffled.slice(0, 3).map((q, i) => ({ ...q, id: Date.now() + i, completed: false, isNew: true }));
-
-                    this.state.dailyQuests = newQuests;
-                    this.state.uiSettings.needsDailyQuestClaim = false;
-                    this.audio.playCoin();
-                    this.render();
-                    setTimeout(() => {
-                        this.state.dailyQuests.forEach(q => q.isNew = false);
-                    }, 500);
-                },
-
-                generateWeeklyQuest() {
-                    const currentWeekId = this.getWeekId(new Date());
-
-                    if (this.state.lastWeeklyQuestDate !== currentWeekId || !this.state.weeklyQuest) {
-                        if (this.state.lastWeeklyQuestDate !== currentWeekId) {
-                            this.state.player.stats.questsCompletedThisWeek = 0;
-                            this.state.player.stats.goldEarnedThisWeek = 0;
-                            this.state.player.stats.skillsLeveledThisWeek = 0;
-                            this.state.uiSettings.weeklyFocusSkill = null;
-                        }
-                        
-                        const randomIndex = Math.floor(Math.random() * this.config.weeklyQuestPool.length);
-                        const newQuestTemplate = this.config.weeklyQuestPool[randomIndex];
-                        this.state.weeklyQuest = { id: newQuestTemplate.id, completed: false };
-                        this.state.lastWeeklyQuestDate = currentWeekId;
-                    } else {
-                        this.checkWeeklyQuestProgress();
-                    }
-                },
-
-                generateMerchantDeals() {
-                    const today = new Date().toDateString();
-                    if (this.state.merchant.lastStockDate === today && this.state.merchant.dailyDealId) return;
-
-                    const allItems = this.config.travelingMerchantItems;
-                    const consumables = allItems.filter(i => i.duration !== Infinity);
-                    const permanent = allItems.filter(i => i.duration === Infinity);
-
-                    const dailyCandidates = consumables.filter(i => i.id !== this.state.merchant.dailyDealId);
-                    if (dailyCandidates.length > 0) {
-                        this.state.merchant.dailyDealId = dailyCandidates[Math.floor(Math.random() * dailyCandidates.length)].id;
-                    }
-
-                    const currentWeekId = this.getWeekId(new Date());
-                    if (this.state.merchant.lastStockWeekId !== currentWeekId || !this.state.merchant.weeklyDealId) {
-                        const weeklyCandidates = permanent.filter(i => i.id !== this.state.merchant.weeklyDealId);
-                         if (weeklyCandidates.length > 0) {
-                            this.state.merchant.weeklyDealId = weeklyCandidates[Math.floor(Math.random() * weeklyCandidates.length)].id;
-                        }
-                        this.state.merchant.lastStockWeekId = currentWeekId;
-                    }
-
-                    this.state.merchant.lastStockDate = today;
-                },
-
-                getWeekId(date) {
-                    const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
-                    d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
-                    const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
-                    const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
-                    return `${d.getUTCFullYear()}-W${weekNo}`;
-                },
-
-                checkWeeklyQuestProgress() {
-                    if (!this.state.weeklyQuest || this.state.weeklyQuest.completed) return;
-                    const questConfig = this.config.weeklyQuestPool.find(q => q.id === this.state.weeklyQuest.id);
-                    if (questConfig && questConfig.condition(this.state)) {
-                        this.state.weeklyQuest.completed = true;
-                        this.state.player.xp += questConfig.xp;
-                        const goldReward = this.config.goldForTask(questConfig.xp);
-                        this.state.player.gold += goldReward;
-                        this.showToast("EPIC QUEST COMPLETE!", `+${questConfig.xp} XP & +${goldReward} G`, "levelup");
-                        this.checkPlayerLevelUp();
-                        this.render(); // Re-render to show completion
-                    }
+                    });
                 },
                 
                 checkAchievements() {
@@ -1466,37 +1333,6 @@
                     this.saveStateDebounced();
                 },
 
-                renderManageDailies() {
-                    const content = this.state.customDailies.map(q => `
-                        <div class="bg-themed p-2 rounded-lg flex justify-between items-center">
-                            <p>${q.name}</p>
-                            <button data-id="${q.id}" class="text-red-400 p-1 rounded-full">&times;</button>
-                        </div>`
-                    ).join('') || `<p class="text-center text-gray-400">No custom dailies yet.</p>`;
-                    
-                    this.dom.manageDailiesModal.innerHTML = `
-                    <div class="card p-6 rounded-lg shadow-2xl max-w-lg w-full mx-4 anim-fade-in flex flex-col">
-                        <div class="flex justify-between items-center card-header pb-3 mb-4">
-                            <h3 class="text-2xl font-bold">Manage Daily Quests</h3>
-                            <button id="dailiesCloseBtn" class="p-2 rounded-full hover:bg-themed">&times;</button>
-                        </div>
-                        <div class="space-y-2 mb-4 scrollable-content pr-2 max-h-60 overflow-y-auto">${content}</div>
-                        <h4 class="text-lg font-semibold mt-auto mb-2">Add New Daily</h4>
-                        <form id="add-daily-form" class="flex gap-2">
-                            <input type="text" id="daily-name" placeholder="Name" class="p-2 bg-themed rounded-lg flex-grow" required>
-                            <input type="text" id="daily-category" placeholder="Category" class="p-2 bg-themed rounded-lg w-32" required>
-                            <input type="number" id="daily-xp" placeholder="XP" class="p-2 bg-themed rounded-lg w-20" required>
-                            <button type="submit" class="bg-blue-600 hover:bg-blue-700 p-2 rounded-lg">+</button>
-                        </form>
-                    </div>`;
-
-                    this.dom.manageDailiesModal.addEventListener('click', e => {
-                        if (e.target.closest('button[data-id]')) {
-                            this.handleDeleteCustomDaily(Number(e.target.closest('button[data-id]').dataset.id));
-                        }
-                    });
-                },
-
                 renderAvatarModal() {
                     const availableAvatars = {...this.config.avatars};
                     if (!this.state.unlockedJourneyChapters['hj3']) {
@@ -1524,67 +1360,8 @@
                         <div class="grid grid-cols-3 gap-4">${content}</div>
                     </div>`;
                 },
-
-                renderWeeklyQuest() {
-                    this.dom.weeklyQuestCard.style.borderColor = 'var(--accent-primary)';
-                    if (!this.state.weeklyQuest) {
-                        this.dom.weeklyQuestCard.innerHTML = `<p class="text-center text-gray-400">Loading weekly quest...</p>`;
-                        return;
-                    }
-                    const questState = this.state.weeklyQuest;
-                    const questConfig = this.config.weeklyQuestPool.find(q => q.id === questState.id);
-                    if (!questConfig) return;
-
-                    let progress = 0, progressText = '';
-                    if (questConfig.id === 'wq1') {
-                        progress = (this.state.player.stats.questsCompletedThisWeek / questConfig.target) * 100;
-                        progressText = `${this.state.player.stats.questsCompletedThisWeek} / ${questConfig.target}`;
-                    } else if (questConfig.id === 'wq2') {
-                        progress = (this.state.player.stats.goldEarnedThisWeek / questConfig.target) * 100;
-                        progressText = `${this.state.player.stats.goldEarnedThisWeek} / ${questConfig.target}`;
-                    }
-
-                    const content = `
-                    <h2 class="text-xl font-bold mb-2 text-accent-primary card-header pb-2">Weekly Epic Quest</h2>
-                    <div>
-                        ${questState.completed ? `
-                        <div class="text-center py-4">
-                            <p class="text-2xl font-bold text-green-400">EPIC QUEST COMPLETE!</p>
-                            <p class="text-gray-300">${questConfig.name}</p>
-                        </div>` : `
-                        <p class="font-semibold text-lg">${questConfig.name}</p>
-                        <div class="my-3">
-                            <div class="flex justify-between text-sm mb-1"><span>Progress</span><span>${progressText}</span></div>
-                            <div class="w-full progress-bar-bg rounded-full h-3"><div class="bg-accent-primary h-3 rounded-full" style="width: ${Math.min(progress, 100)}%"></div></div>
-                        </div>
-                        <p class="text-sm">Reward: <span class="text-accent-primary font-semibold">${questConfig.xp} XP</span> &bull; <span class="gold-text font-semibold">${this.config.goldForTask(questConfig.xp)} G</span></p>
-                        <p id="weekly-timer" class="text-xs text-gray-400 mt-2 text-center"></p>`}
-                    </div>`;
-                    this.dom.weeklyQuestCard.innerHTML = content;
-                    this.startWeeklyTimer();
-                },
                 
                 handleNameChange(e) { this.state.character.name = e.target.value; this.saveStateDebounced(); },
-                
-                handleAddCustomDaily(e) {
-                    e.preventDefault();
-                    const form = e.target;
-                    const name = form.querySelector('#daily-name').value.trim();
-                    const category = form.querySelector('#daily-category').value.trim();
-                    const xp = Number(form.querySelector('#daily-xp').value);
-                    if (name && category && xp > 0) {
-                        this.state.customDailies.push({ id: Date.now(), name, category, xp });
-                        this.renderManageDailies();
-                        this.saveStateDebounced();
-                        form.reset();
-                    }
-                },
-                
-                handleDeleteCustomDaily(id) {
-                    this.state.customDailies = this.state.customDailies.filter(d => d.id !== id);
-                    this.renderManageDailies();
-                    this.saveStateDebounced();
-                },
                 
                 handleAddReward(e) {
                     e.preventDefault();
@@ -1614,8 +1391,8 @@
                     }
                 },
                 
-                buyMerchantItem(itemId) {
-                    const item = this.config.travelingMerchantItems.find(i => i.id === itemId);
+                buyBlackMarketItem(itemId) {
+                    const item = this.config.blackMarketItems.find(i => i.id === itemId);
                     if (!item) return;
 
                     if (this.state.player.gold < item.cost) {
@@ -1694,18 +1471,13 @@
                             <h3 class="font-semibold">No Skills Yet</h3><p>Complete quests to discover and level up skills!</p></div>`;
                         return;
                     }
-                    const focusSkill = this.state.uiSettings.weeklyFocusSkill;
                     this.dom.skillsList.innerHTML = Object.entries(this.state.skills).map(([name, skill]) => {
                         const reqXp = this.config.xpForLevel(skill.level);
                         const progress = (skill.xp / reqXp) * 100;
-                        const isFocus = name === focusSkill;
                         return `
-                        <div class="skill-item p-2 rounded-lg border border-transparent transition-colors ${isFocus ? 'is-focus' : ''}">
+                        <div class="skill-item p-2 rounded-lg border border-transparent transition-colors">
                             <div class="flex justify-between items-baseline mb-1">
                                 <div class="flex items-center gap-2">
-                                    <button data-action="set-focus" data-skill="${name}" class="skill-focus-button text-gray-600 hover:text-yellow-400 transition-colors ${isFocus ? 'active' : ''}">
-                                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
-                                    </button>
                                     <span class="font-semibold">${name}</span>
                                 </div>
                                 <span class="text-sm font-bold">Lvl ${skill.level}</span>
@@ -1735,7 +1507,7 @@
                 },
 
                  renderShop() {
-                    this.renderMerchantDeals();
+                    this.renderBlackMarket();
                     if (this.state.shop.length === 0) {
                         this.dom.shopList.innerHTML = `<div class="empty-state-container text-sm text-gray-400">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1"><path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" /></svg>
@@ -1753,46 +1525,54 @@
                         </div>`).join('');
                 },
 
-                renderMerchantDeals() {
-                    const dailyItem = this.config.travelingMerchantItems.find(i => i.id === this.state.merchant.dailyDealId);
-                    const weeklyItem = this.config.travelingMerchantItems.find(i => i.id === this.state.merchant.weeklyDealId);
-                    
-                    let html = `<h3 class="text-lg font-semibold mb-2">Traveling Merchant</h3>`;
-                    
-                    if (dailyItem) {
-                        html += this.renderMerchantItem(dailyItem, 'Daily Deal');
-                    }
-                    if (weeklyItem) {
-                        html += this.renderMerchantItem(weeklyItem, 'Weekly Deal');
-                    }
-                    
-                    this.dom.travelingMerchantSection.innerHTML = html;
+                renderBlackMarket() {
+                    let html = `<h3 class="text-lg font-semibold mb-2">Black Market</h3>`;
+                    html += this.config.blackMarketItems.map(item => {
+                        const hasBuff = this.state.player.activeBuffs.some(b => b.id === item.id);
+                        const canAfford = this.state.player.gold >= item.cost;
+                        const isDisabled = hasBuff || !canAfford;
+                        return `<div class="bg-themed p-3 rounded-lg mb-2 border-l-4 border-red-500">
+                            <div class="flex justify-between items-center">
+                                <div>
+                                    <p class="font-semibold">${item.icon} ${item.name}</p>
+                                    <p class="text-xs text-text-secondary">${item.desc}</p>
+                                    <p class="text-sm gold-text font-semibold">${item.cost} G</p>
+                                </div>
+                                <button data-action="buy-black-market-item" data-id="${item.id}" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-3 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed" ${isDisabled ? 'disabled' : ''}>
+                                    ${hasBuff ? 'Owned' : 'Buy'}
+                                </button>
+                            </div>
+                        </div>`;
+                    }).join('');
+                    this.dom.blackMarketSection.innerHTML = html;
                 },
                 
-                renderMerchantItem(item, dealType) {
-                    const hasBuff = this.state.player.activeBuffs.some(b => b.id === item.id);
-                    const canAfford = this.state.player.gold >= item.cost;
-                    const isDisabled = hasBuff || !canAfford;
-                    
-                    return `<div class="bg-themed p-3 rounded-lg mb-2 border-l-4 border-purple-500">
-                        <p class="text-sm font-bold text-purple-400">${dealType}</p>
-                        <div class="flex justify-between items-center">
-                            <div>
-                                <p class="font-semibold">${item.icon} ${item.name}</p>
-                                <p class="text-xs text-text-secondary">${item.desc}</p>
-                                <p class="text-sm gold-text font-semibold">${item.cost} G</p>
-                            </div>
-                            <button data-action="buy-merchant-item" data-id="${item.id}" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-3 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed" ${isDisabled ? 'disabled' : ''}>
-                                ${hasBuff ? 'Owned' : 'Buy'}
-                            </button>
-                        </div>
-                    </div>`;
+                renderBountyBoard() {
+                    let html = `<h2 class="text-2xl font-semibold mb-4 card-header pb-3">Bounty Board</h2>`;
+                    if (this.state.bounties.active.length === 0) {
+                        html += `<div class="empty-state-container text-sm text-gray-400"><p>No bounties today. Check back tomorrow!</p></div>`;
+                    } else {
+                        html += '<div class="space-y-3">';
+                        html += this.state.bounties.active.map(bountyId => {
+                            const bounty = this.config.bountyPool.find(b => b.id === bountyId);
+                            if (!bounty) return '';
+                            const isCompleted = this.state.bounties.completedToday[bountyId];
+                            return `<div class="bg-themed p-3 rounded-lg border-l-4 border-yellow-500 ${isCompleted ? 'opacity-50' : ''}">
+                                <p class="font-semibold">${bounty.name}</p>
+                                <p class="text-sm text-text-secondary">${bounty.desc}</p>
+                                <p class="text-sm mt-1">Reward: <span class="text-accent-primary font-semibold">${bounty.reward.xp} XP</span> &bull; <span class="gold-text font-semibold">${bounty.reward.gold} G</span></p>
+                                ${isCompleted ? '<p class="text-xs text-green-400 font-bold mt-1">COMPLETED</p>' : ''}
+                            </div>`;
+                        }).join('');
+                        html += '</div>';
+                    }
+                    this.dom.bountyBoardCard.innerHTML = html;
                 },
 
                 renderActiveBuffs() {
                     this.checkActiveBuffs();
                     this.dom.activeBuffsContainer.innerHTML = this.state.player.activeBuffs.map(buff => {
-                        const item = this.config.travelingMerchantItems.find(i => i.id === buff.id);
+                        const item = this.config.blackMarketItems.find(i => i.id === buff.id);
                         if (!item) return '';
 
                         const expiresIn = buff.expiresAt ? `Expires: ${new Date(buff.expiresAt).toLocaleTimeString()}` : 'Permanent';
@@ -1811,7 +1591,7 @@
                            ${this.createStatItem('quests', 'Quests Completed', questsCompleted)}
                            ${this.createStatItem('xp', 'Total XP Gained', `${Math.round(totalXpGained)} XP`)}
                            ${this.createStatItem('gold', 'Total Gold Earned', `<span class="gold-text">${Math.round(totalGoldEarned)} G</span>`)}
-                           ${this.createStatItem('spent', 'Total Gold Spent', `<span class="gold-text">${totalGoldSpent || 0} G</span>`)}
+                           ${this.createStatItem('spent', 'Total Gold Spent', `${totalGoldSpent || 0} G</span>`)}
                            ${this.createStatItem('chest', 'Rewards Claimed', rewardsClaimed || 0)}
                         </div>`;
                 },
@@ -1865,8 +1645,7 @@
                 handleResetData() {
                     this.showModal('confirmationModal', 'Reset All Data?', 'This will permanently delete all progress. This action cannot be undone.', async () => {
                         this.state = this.getDefaultState();
-                        this.generateDailyQuests();
-                        this.generateWeeklyQuest();
+                        this.generateBounties();
                         await this.saveStateToFirestore(); // Save the reset state
                         this.hideModal('confirmationModal');
                         this.showToast('All data has been reset.', '', 'success');
@@ -1910,7 +1689,6 @@
                     const modal = document.getElementById(modalId);
                     switch (modalId) {
                         case 'settingsModal': this.renderSettings(); break;
-                        case 'manageDailiesModal': this.renderManageDailies(); break;
                         case 'avatarModal': this.renderAvatarModal(); break;
                         case 'questLogModal': this.renderQuestLog(); break;
                         case 'confirmationModal': {
@@ -2145,26 +1923,6 @@
                         container.appendChild(cell);
                     }
                 },
-
-
-                startWeeklyTimer() {
-                    if (this.weeklyTimerInterval) clearInterval(this.weeklyTimerInterval);
-                    const timerEl = document.getElementById("weekly-timer");
-                    if (timerEl) {
-                        this.weeklyTimerInterval = setInterval(() => {
-                            const now = new Date();
-                            const endOfWeek = new Date();
-                            endOfWeek.setDate(now.getDate() + (7 - now.getDay()));
-                            endOfWeek.setHours(23, 59, 59, 999);
-                            const diff = endOfWeek - now;
-                            const d = Math.floor(diff / (1000 * 60 * 60 * 24));
-                            const h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-                            const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-                            const s = Math.floor((diff % (1000 * 60)) / 1000);
-                            timerEl.textContent = `Time Remaining: ${d}d ${h}h ${m}m ${s}s`;
-                        }, 1000);
-                    }
-                },
                 
                 renderQuestLog() {
                     const content = this.state.completedTasks.length === 0 ? '<p class="text-gray-400 text-center">No completed quests yet.</p>' : [...this.state.completedTasks].map(task => {
@@ -2238,9 +1996,12 @@
                     }
                 },
 
-                handleAvatarSelect(avatar) {
+                 handleAvatarSelect(avatar) {
                     this.state.character.avatar = avatar;
-                    this.state.character.class = this.config.classBonuses[avatar] ? avatar : this.state.character.class;
+                    // FIX: Ensure class only changes if the avatar is a valid class, not a special one
+                    if (this.config.classBonuses[avatar]) {
+                        this.state.character.class = avatar;
+                    }
                     this.render();
                     this.hideModal('avatarModal');
                 }

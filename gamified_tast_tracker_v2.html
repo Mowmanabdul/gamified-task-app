@@ -1,0 +1,2260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QuestLog RPG</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0D1117;
+            --bg-secondary: rgba(31, 41, 55, 0.7);
+            --border-color: rgba(55, 65, 81, 0.7);
+            --text-primary: #F3F4F6;
+            --text-secondary: #9CA3AF;
+            --accent-primary: #3B82F6;
+            --accent-secondary: #8B5CF6;
+            --accent-gold: #facc15;
+            --accent-streak: #f97316;
+            --accent-success: #10B981;
+            --accent-error: #EF4444;
+            --priority-low: #22c55e;
+            --priority-medium: #eab308;
+            --priority-high: #ef4444;
+        }
+
+        [data-theme="light"] {
+            --bg-primary: #F3F4F6;
+            --bg-secondary: rgba(255, 255, 255, 0.7);
+            --border-color: rgba(209, 213, 219, 0.7);
+            --text-primary: #1F2937;
+            --text-secondary: #4B5563;
+        }
+
+        [data-theme="forest"] {
+            --bg-primary: #1A2E2C;
+            --bg-secondary: rgba(29, 58, 55, 0.7);
+            --border-color: rgba(43, 87, 83, 0.7);
+            --text-primary: #E0EBEA;
+            --text-secondary: #9DBFBC;
+            --accent-primary: #34D399;
+            --accent-secondary: #A7F3D0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            transition: background-color 0.3s, color 0.3s;
+        }
+        
+        .aurora-background {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; overflow: hidden;
+        }
+        .aurora-background::before {
+            content: ''; position: absolute; top: 50%; left: 50%; width: 1200px; height: 1200px;
+            background-image: radial-gradient(circle, var(--accent-primary) 0%, var(--accent-secondary) 50%, transparent 70%);
+            opacity: 0.3; transform: translate(-50%, -50%); animation: pulse 20s infinite ease-in-out; filter: blur(120px);
+        }
+        @keyframes pulse {
+            0% { transform: translate(-50%, -50%) scale(1); }
+            50% { transform: translate(-45%, -55%) scale(1.3); }
+            100% { transform: translate(-50%, -50%) scale(1); }
+        }
+
+        .card {
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 0.75rem;
+            transition: all 0.2s ease-in-out;
+        }
+        .card-header { border-bottom: 1px solid var(--border-color); }
+
+        .progress-bar-bg { background-color: rgba(0,0,0,0.2); }
+        .progress-bar-fill { transition: width 0.5s ease-in-out; }
+        .xp-bar { background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary)); }
+        .skill-bar { background: linear-gradient(90deg, var(--accent-secondary), var(--accent-primary)); }
+        .gold-text { color: var(--accent-gold); }
+        .streak-text { color: var(--accent-streak); }
+
+        .text-accent-primary { color: var(--accent-primary); }
+        .text-accent-secondary { color: var(--accent-secondary); }
+        
+        input, button, select, .bg-themed {
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+        }
+        select { -webkit-appearance: none; -moz-appearance: none; appearance: none; background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e"); background-position: right 0.5rem center; background-repeat: no-repeat; background-size: 1.5em 1.5em; padding-right: 2.5rem; }
+
+        input[type=range] { -webkit-appearance: none; background: transparent; }
+        input[type=range]::-webkit-slider-runnable-track { height: 6px; background: var(--border-color); border-radius: 3px; }
+        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; margin-top: -6px; height: 18px; width: 18px; border-radius: 50%; background: var(--accent-primary); cursor: pointer; }
+        
+        input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); }
+        input[type="checkbox"] { accent-color: var(--accent-primary); }
+
+        .anim-fade-in { animation: fadeInUp 0.5s ease-out forwards; }
+        .anim-fade-out { animation: fadeOutShrink 0.4s ease-in forwards; }
+
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeOutShrink { from { opacity: 1; transform: scale(1); } to { opacity: 0; transform: scale(0.9); height: 0; padding: 0; margin: 0; border: 0; } }
+        
+        .level-up-animation { animation: levelUpPulse 1.5s ease-out; }
+        @keyframes levelUpPulse { 0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7); } 50% { transform: scale(1.2); box-shadow: 0 0 20px 15px rgba(59, 130, 246, 0); } 100% { transform: scale(1); } }
+        
+        .toast {
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+        }
+        .toast-success { border-left: 4px solid var(--accent-success); }
+        .toast-error { border-left: 4px solid var(--accent-error); }
+        .toast-levelup { border-left: 4px solid var(--accent-gold); }
+
+        .modal { display: none; opacity: 0; transition: opacity 0.3s ease; }
+        .modal.flex { display: flex; }
+        .modal.opacity-100 { opacity: 1; }
+
+        .achievement.unlocked .achievement-icon { color: var(--accent-gold); filter: drop-shadow(0 0 5px var(--accent-gold)); }
+        .achievement.locked .achievement-icon { color: var(--text-secondary); }
+        .achievement.locked .achievement-text { color: var(--text-secondary); }
+
+        .scrollable-content::-webkit-scrollbar { width: 8px; }
+        .scrollable-content::-webkit-scrollbar-track { background: transparent; }
+        .scrollable-content::-webkit-scrollbar-thumb { background-color: var(--border-color); border-radius: 4px; }
+        .scrollable-content { scrollbar-width: thin; scrollbar-color: var(--border-color) transparent; }
+        
+        #avatar-display { image-rendering: pixelated; }
+        .avatar-select-button.selected { border-color: var(--accent-primary); box-shadow: 0 0 10px var(--accent-primary); }
+
+        .tooltip { position: relative; display: inline-block; cursor: pointer; }
+        .tooltip .tooltiptext { 
+            visibility: hidden; 
+            width: auto;
+            white-space: nowrap;
+            background-color: var(--bg-secondary);
+            color: var(--text-primary); 
+            text-align: center; 
+            border-radius: 6px; 
+            padding: 6px 10px; 
+            position: absolute; 
+            z-index: 10; 
+            bottom: 125%; 
+            left: 50%; 
+            transform: translateX(-50%);
+            opacity: 0; 
+            transition: opacity 0.3s; 
+            border: 1px solid var(--border-color);
+            font-size: 0.75rem; 
+            line-height: 1.2; 
+        }
+        .tooltip:hover .tooltiptext { visibility: visible; opacity: 1; }
+
+        .priority-low { border-left: 4px solid var(--priority-low); }
+        .priority-medium { border-left: 4px solid var(--priority-medium); }
+        .priority-high { border-left: 4px solid var(--priority-high); }
+
+        .reward-fly-up {
+            position: absolute;
+            padding: 4px 8px;
+            border-radius: 9999px;
+            font-weight: bold;
+            font-size: 0.9rem;
+            pointer-events: none;
+            z-index: 100;
+            animation: floatAndFade 1.5s ease-out forwards;
+        }
+
+        @keyframes floatAndFade {
+            0% { transform: translateY(0) scale(1); opacity: 1; }
+            100% { transform: translateY(-80px) scale(0.8); opacity: 0; }
+        }
+
+        .card-flash {
+            animation: cardFlashPulse 0.8s ease-out;
+        }
+
+        @keyframes cardFlashPulse {
+            0% { box-shadow: 0 0 0 0 rgba(250, 204, 21, 0.7); }
+            50% { box-shadow: 0 0 15px 5px rgba(250, 204, 21, 0.3); }
+            100% { box-shadow: none; }
+        }
+        .empty-state-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            height: 100%;
+            padding: 1.5rem;
+            opacity: 0.6;
+        }
+        .chart-tab.active {
+            border-color: var(--accent-primary);
+            color: var(--text-primary);
+        }
+        #advanced-options {
+            transition: max-height 0.5s ease-in-out, opacity 0.5s ease-in-out, margin-top 0.5s ease-in-out;
+            overflow: hidden;
+            max-height: 0;
+            opacity: 0;
+        }
+        #advanced-options.open {
+            max-height: 1000px; /* Large enough to fit content */
+            opacity: 1;
+            margin-top: 1rem;
+        }
+        .mobile-tab.active {
+            color: var(--accent-primary);
+        }
+
+        .quest-complete-flash {
+            animation: questCompleteFlash 0.7s ease-out;
+        }
+
+        @keyframes questCompleteFlash {
+            0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+            50% { box-shadow: 0 0 12px 4px rgba(16, 185, 129, 0.5); }
+            100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        }
+        .skill-focus-button.active { color: var(--accent-gold); }
+        .skill-item.is-focus { background-color: rgba(250, 204, 21, 0.1); border-color: var(--accent-gold); }
+    </style>
+</head>
+<body class="antialiased">
+    <div class="aurora-background"></div>
+    <div class="container mx-auto p-4 md:p-8 max-w-7xl relative pb-20 lg:pb-8">
+        <header class="text-center mb-8 relative">
+            <h1 class="text-5xl md:text-6xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500 mb-2">QuestLog</h1>
+            <p class="text-lg text-gray-400">Level up your life, one quest at a time.</p>
+            <button id="settings-btn" class="absolute top-0 right-0 p-2 rounded-full hover:bg-themed transition">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066 2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+            </button>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:items-start">
+            <!-- Left Column (Player Dashboard) -->
+            <div id="mobile-panel-dashboard" class="space-y-8 lg:col-span-1 hidden lg:block">
+                <div id="player-card" class="card p-6 shadow-lg">
+                    <div class="grid grid-cols-3 gap-4 items-center">
+                        <div class="col-span-1">
+                             <div id="avatar-display" class="w-24 h-24 bg-gray-900 rounded-lg overflow-hidden border-2 border-themed mx-auto cursor-pointer bg-cover bg-center"></div>
+                             <div id="active-buffs-container" class="flex justify-center items-center gap-2 mt-2 h-6"></div>
+                        </div>
+                        <div class="col-span-2">
+                            <input type="text" id="character-name" class="w-full text-2xl font-bold bg-transparent border-0 border-b-2 border-themed focus:outline-none focus:ring-0 p-1" value="Hero">
+                            <p id="character-class" class="text-sm text-accent-secondary font-semibold capitalize"></p>
+                            <p id="weekly-focus-text" class="text-xs text-center text-accent-primary font-semibold mt-2 h-4"></p>
+                            <div class="mt-2 flex justify-between items-center text-sm font-medium text-gray-300">
+                                <span>Level <span id="player-level" class="font-bold">1</span></span>
+                                <span id="player-xp-text">0 / 100</span>
+                            </div>
+                            <div class="w-full progress-bar-bg rounded-full h-4 mt-1 overflow-hidden">
+                                <div id="player-xp-bar" class="progress-bar-fill xp-bar h-4 rounded-full" style="width: 0%"></div>
+                            </div>
+                             <div class="mt-2 flex justify-between">
+                                 <div><span class="font-semibold">Gold:</span> <span id="player-gold" class="font-bold gold-text">0 G</span></div>
+                                 <div><span class="font-semibold">Streak:</span> <span id="player-streak" class="font-bold streak-text">🔥 0</span></div>
+                             </div>
+                        </div>
+                    </div>
+                </div>
+                 <div class="card p-6 min-h-[200px]">
+                    <h2 class="text-2xl font-semibold mb-4 card-header pb-3">The Hero's Journey</h2>
+                    <div id="hero-journey-list" class="space-y-4 scrollable-content pr-2 max-h-72 overflow-y-auto"></div>
+                </div>
+                 <div class="card p-6 min-h-[200px]">
+                    <h2 class="text-2xl font-semibold mb-4 card-header pb-3">Skills</h2>
+                    <div id="skills-list" class="space-y-4 scrollable-content pr-2 max-h-72 overflow-y-auto"></div>
+                </div>
+                 <div class="card p-6 min-h-[200px]">
+                    <h2 class="text-2xl font-semibold mb-4 card-header pb-3">Achievements</h2>
+                    <div id="achievements-list" class="space-y-4 scrollable-content pr-2 max-h-72 overflow-y-auto"></div>
+                </div>
+                <div class="card p-6">
+                    <h2 class="text-2xl font-semibold mb-4 card-header pb-3">Player Profile & Stats</h2>
+                    <div id="player-profile-stats" class="text-sm mb-4"></div>
+                    <!-- Chart Tabs -->
+                    <div class="mt-4 border-b border-themed flex">
+                        <button data-tab="weekly" class="profile-tab chart-tab px-4 py-2 text-sm font-medium border-b-2 active">Weekly</button>
+                        <button data-tab="category" class="profile-tab chart-tab px-4 py-2 text-sm font-medium border-b-2 border-transparent text-text-secondary hover:text-text-primary">Breakdown</button>
+                        <button data-tab="insights" class="profile-tab chart-tab px-4 py-2 text-sm font-medium border-b-2 border-transparent text-text-secondary hover:text-text-primary">Insights</button>
+                    </div>
+                    <!-- Chart Canvases -->
+                    <div id="profile-tab-content-weekly" class="h-48 mt-4 relative">
+                        <canvas id="stats-chart"></canvas>
+                    </div>
+                    <div id="profile-tab-content-category" class="h-48 mt-4 relative" style="display: none;">
+                         <canvas id="category-donut-chart"></canvas>
+                    </div>
+                    <div id="profile-tab-content-insights" class="mt-4" style="display: none;">
+                        <div class="space-y-6">
+                             <div>
+                                <h4 class="text-sm font-semibold mb-2 text-center text-text-secondary">Productivity Heatmap (Last 35 Days)</h4>
+                                <div id="productivity-heatmap" class="grid grid-rows-5 grid-flow-col gap-1.5 justify-center p-2 bg-themed rounded-lg"></div>
+                            </div>
+                            <div class="h-56 relative">
+                                <h4 class="text-sm font-semibold mb-2 text-center text-text-secondary">XP Earned per Skill</h4>
+                                <canvas id="skill-radar-chart"></canvas>
+                            </div>
+                             <div class="h-48 relative">
+                                <h4 class="text-sm font-semibold mb-2 text-center text-text-secondary">Productivity by Hour of Day</h4>
+                                <canvas id="time-of-day-chart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    <button id="quest-log-btn" class="mt-4 w-full bg-gray-600 hover:bg-gray-700 text-white font-semibold py-2 px-4 rounded-lg transition">View Full Log</button>
+                </div>
+            </div>
+
+            <!-- Middle Column (Quest Hub) -->
+            <div id="mobile-panel-quests" class="space-y-8 lg:col-span-1 block lg:block">
+                <div class="card p-6">
+                    <h2 class="text-2xl font-semibold mb-4 card-header pb-3">Add New Quest</h2>
+                    <form id="add-task-form" class="space-y-4">
+                        <input type="text" id="task-name" required placeholder="What's your next quest?" class="w-full p-3 bg-themed rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <input type="text" id="task-category" list="skill-suggestions" required placeholder="Skill / Category (e.g., Fitness)" class="w-full p-3 bg-themed rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <datalist id="skill-suggestions"></datalist>
+                        <div>
+                            <label for="task-xp" class="block text-sm font-medium mb-2">XP Reward</label>
+                            <div class="flex items-center gap-4">
+                               <input type="range" id="task-xp" min="10" max="500" step="10" value="50" class="w-full">
+                               <span id="task-xp-value" class="font-bold text-accent-primary w-16 text-center">50 XP</span>
+                            </div>
+                        </div>
+
+                        <button type="button" id="toggle-advanced-btn" class="w-full text-sm text-center text-accent-primary hover:underline">Show Advanced Options</button>
+                        
+                        <div id="advanced-options" class="space-y-4">
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label for="task-priority" class="block text-sm font-medium mb-2">Priority</label>
+                                    <select id="task-priority" class="w-full p-3 bg-themed rounded-lg">
+                                        <option value="low">Low</option>
+                                        <option value="medium" selected>Medium</option>
+                                        <option value="high">High</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label for="task-due-date" class="block text-sm font-medium mb-2">Due Date (Optional)</label>
+                                    <input type="date" id="task-due-date" class="w-full p-3 bg-themed rounded-lg">
+                                </div>
+                            </div>
+                             <div>
+                                <label for="task-recurrence" class="block text-sm font-medium mb-2">Recurrence</label>
+                                <select id="task-recurrence" class="w-full p-3 bg-themed rounded-lg">
+                                    <option value="none">None (One-time quest)</option>
+                                    <option value="daily">Daily</option>
+                                    <option value="weekly">Weekly</option>
+                                    <option value="monthly">Monthly</option>
+                                </select>
+                            </div>
+                            <div id="recurrence-options" class="space-y-2"></div>
+                            <div>
+                                <label class="block text-sm font-medium mb-2">Sub-quests (Checklist)</label>
+                                <div class="flex gap-2 mb-2">
+                                    <input type="text" id="subtask-name" placeholder="Add a smaller step..." class="w-full p-2 bg-themed rounded-lg">
+                                    <button type="button" id="add-subtask-btn" class="bg-purple-600 hover:bg-purple-700 text-white font-bold p-2 rounded-lg transition transform hover:scale-110">+</button>
+                                </div>
+                                <div id="subtasks-container" class="space-y-2 max-h-28 overflow-y-auto scrollable-content pr-2"></div>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition duration-300 transform hover:scale-105">Embark on Quest</button>
+                    </form>
+                </div>
+                <div id="weekly-quest-card" class="card p-6 border-2"></div>
+                 <div class="card p-6 min-h-[200px]">
+                    <div class="flex justify-between items-center card-header pb-3 mb-4">
+                        <h2 class="text-2xl font-semibold">Daily Quests</h2>
+                        <button id="manage-dailies-btn" class="text-sm bg-gray-600 hover:bg-gray-700 px-3 py-1 rounded-md">Manage</button>
+                    </div>
+                    <div id="daily-quest-list" class="space-y-3 scrollable-content pr-2 max-h-72 overflow-y-auto"></div>
+                </div>
+                <div class="card p-6 min-h-[200px]">
+                    <div class="flex justify-between items-center card-header pb-3">
+                        <h2 class="text-2xl font-semibold">Active Quests</h2>
+                    </div>
+                     <div class="flex flex-col sm:flex-row gap-2 my-4">
+                         <div class="flex-grow">
+                             <label for="filter-category" class="sr-only">Filter by Category</label>
+                             <select id="filter-category" class="w-full p-2 text-sm bg-themed rounded-lg">
+                                 <option value="all">All Categories</option>
+                             </select>
+                         </div>
+                         <div class="flex-grow">
+                             <label for="sort-tasks" class="sr-only">Sort Quests</label>
+                             <select id="sort-tasks" class="w-full p-2 text-sm bg-themed rounded-lg">
+                                 <option value="id-desc">Date Added (Newest)</option>
+                                 <option value="id-asc">Date Added (Oldest)</option>
+                                 <option value="priority-desc">Priority (High to Low)</option>
+                                 <option value="priority-asc">Priority (Low to High)</option>
+                                 <option value="due-date-asc">Due Date (Soonest)</option>
+                                 <option value="xp-desc">XP (Highest)</option>
+                             </select>
+                         </div>
+                     </div>
+                    <div id="task-list" class="space-y-3 scrollable-content pr-2 max-h-72 overflow-y-auto"></div>
+                </div>
+            </div>
+
+            <!-- Right Column (Rewards & System) -->
+            <div id="mobile-panel-shop" class="space-y-8 lg:col-span-1 hidden lg:block">
+                <div class="card p-6 flex flex-col h-full min-h-[500px]">
+                    <h2 class="text-2xl font-semibold mb-4 card-header pb-3">Freedom Shop</h2>
+                    
+                    <div id="traveling-merchant-section"></div>
+
+                    <h3 class="text-lg font-semibold mb-2 mt-4 border-t border-themed pt-4">Your Permanent Rewards</h3>
+                    <div id="shop-list" class="space-y-3 mb-6 scrollable-content pr-2 max-h-48 overflow-y-auto"></div>
+                    
+                    <h3 class="text-lg font-semibold mb-2 mt-auto">Add New Permanent Reward</h3>
+                    <form id="add-reward-form" class="space-y-2">
+                        <div>
+                            <input type="text" id="reward-name" required placeholder="Reward name" class="w-full p-2 bg-themed rounded-lg">
+                        </div>
+                        <div class="flex gap-2">
+                           <input type="number" id="reward-cost" min="1" required placeholder="Cost" class="w-full p-2 bg-themed rounded-lg">
+                           <button type="submit" class="bg-purple-600 hover:bg-purple-700 text-white font-bold p-2 rounded-lg transition transform hover:scale-110">+</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mobile Tab Bar -->
+    <div id="mobile-tab-bar" class="lg:hidden fixed bottom-0 left-0 right-0 h-16 card flex justify-around items-center border-t-2 z-40">
+        <button data-tab="dashboard" class="mobile-tab flex flex-col items-center justify-center w-full h-full">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            </svg>
+            <span class="text-xs">Dashboard</span>
+        </button>
+        <button data-tab="quests" class="mobile-tab flex flex-col items-center justify-center w-full h-full active">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            <span class="text-xs">Quests</span>
+        </button>
+        <button data-tab="shop" class="mobile-tab flex flex-col items-center justify-center w-full h-full">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+            </svg>
+            <span class="text-xs">Shop</span>
+        </button>
+    </div>
+
+    <!-- Modals & Toasts -->
+    <div id="confirmationModal" class="modal fixed inset-0 bg-black/75 items-center justify-center z-50 p-4"></div>
+    <div id="editModal" class="modal fixed inset-0 bg-black/75 items-center justify-center z-50 p-4"></div>
+    <div id="questLogModal" class="modal fixed inset-0 bg-black/75 items-center justify-center z-50 p-4"></div>
+    <div id="settingsModal" class="modal fixed inset-0 bg-black/75 items-center justify-center z-50 p-4"></div>
+    <div id="manageDailiesModal" class="modal fixed inset-0 bg-black/75 items-center justify-center z-50 p-4"></div>
+    <div id="avatarModal" class="modal fixed inset-0 bg-black/75 items-center justify-center z-50 p-4"></div>
+    <div id="toast-container" class="fixed bottom-5 right-5 space-y-2 z-50"></div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, onSnapshot, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const TaskQuest = {
+                // --- Properties ---
+                db: null,
+                auth: null,
+                userId: null,
+                docRef: null,
+                unsubscribe: null,
+                state: {},
+                config: {},
+                dom: {},
+                statsChart: null,
+                categoryChart: null,
+                skillRadarChart: null,
+                timeOfDayChart: null,
+                weeklyTimerInterval: null,
+                saveTimeout: null,
+                tempSubtasks: [],
+                audioContextStarted: false,
+                audio: null,
+
+                // --- Initialization ---
+                async init() {
+                    this.setupConfig();
+                    this.state = this.getDefaultState();
+                    this.initAudio();
+                    this.cacheDOM();
+                    this.bindEvents();
+                    await this.initFirebase();
+                    this.switchMobileTab(this.state.uiSettings.activeMobileTab);
+                },
+                
+                async initFirebase() {
+                    try {
+                        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-task-quest';
+                        
+                        if (typeof __firebase_config === 'undefined') {
+                            console.error("Firebase configuration is missing. App cannot connect to backend.");
+                            this.loadStateFromLocalStorage(); 
+                            this.render();
+                            return;
+                        }
+
+                        const firebaseConfig = JSON.parse(__firebase_config);
+                        
+                        const app = initializeApp(firebaseConfig);
+                        this.db = getFirestore(app);
+                        this.auth = getAuth(app);
+
+                        // Use custom token if available (in collaborative environment), otherwise sign in anonymously
+                        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                            await signInWithCustomToken(this.auth, __initial_auth_token);
+                        } else {
+                            await signInAnonymously(this.auth);
+                        }
+                        
+                        this.userId = this.auth.currentUser.uid;
+                        this.docRef = doc(this.db, "artifacts", appId, "users", this.userId);
+                        
+                        this.listenForFirestoreChanges();
+
+                    } catch (error) {
+                        console.error("Firebase initialization failed:", error);
+                        // Fallback to local storage if Firebase fails
+                        this.loadStateFromLocalStorage(); 
+                        this.render();
+                    }
+                },
+
+                initAudio() {
+                    this.audio = {
+                        startContext: () => {
+                            if (this.audioContextStarted || typeof Tone === 'undefined') return;
+                            Tone.start();
+                            this.audioContextStarted = true;
+                            console.log('Audio context started.');
+                        },
+                        playComplete: () => {
+                            if (!this.state.settings.sound || typeof Tone === 'undefined') return;
+                            const synth = new Tone.Synth({ oscillator: { type: 'sine' }, envelope: { attack: 0.01, decay: 0.2, sustain: 0.2, release: 0.2 } }).toDestination();
+                            synth.triggerAttackRelease('E5', '8n');
+                        },
+                        playCoin: () => {
+                            if (!this.state.settings.sound || typeof Tone === 'undefined') return;
+                            const synth = new Tone.Synth({ oscillator: { type: 'square' }, envelope: { attack: 0.005, decay: 0.1, sustain: 0, release: 0.1 } }).toDestination();
+                            synth.triggerAttackRelease('G5', '16n');
+                        },
+                        playLevelUp: () => {
+                            if (!this.state.settings.sound || typeof Tone === 'undefined') return;
+                            const synth = new Tone.PolySynth(Tone.Synth).toDestination();
+                            const now = Tone.now();
+                            synth.triggerAttackRelease(['C4', 'E4', 'G4', 'C5'], '8n', now);
+                        },
+                        playAchievement: () => {
+                            if (!this.state.settings.sound || typeof Tone === 'undefined') return;
+                            const synth = new Tone.FMSynth({ harmonicity: 3.01, modulationIndex: 14, envelope: { attack: 0.01, decay: 0.2, sustain: 0.01, release: 0.5 }, modulationEnvelope: { attack: 0.01, decay: 0.2, sustain: 0.01, release: 0.5 } }).toDestination();
+                            const now = Tone.now();
+                            synth.triggerAttackRelease('C5', '8n', now);
+                            synth.triggerAttackRelease('E5', '8n', now + 0.1);
+                            synth.triggerAttackRelease('G5', '8n', now + 0.2);
+                        },
+                        playAddTask: () => {
+                            if (!this.state.settings.sound || typeof Tone === 'undefined') return;
+                            const synth = new Tone.MembraneSynth().toDestination();
+                            synth.triggerAttackRelease("C2", "8n");
+                        },
+                    };
+                    document.body.addEventListener('click', () => this.audio.startContext(), { once: true });
+                },
+
+                setupConfig() {
+                    this.config = {
+                        xpForLevel: level => Math.floor(100 * Math.pow(1.5, level - 1)),
+                        goldForTask: xp => Math.ceil(xp / 8),
+                        priorityMultiplier: { low: 1, medium: 1.1, high: 1.25 },
+                        classBonuses: {
+                            knight: { type: 'gold', categories: ['Fitness', 'Chores'], multiplier: 1.1, description: '+10% Gold from Fitness & Chore quests.' },
+                            mage: { type: 'xp', categories: ['Learning', 'Creative'], multiplier: 1.1, description: '+10% XP from Learning & Creative quests.' },
+                            archer: { type: 'crit', chance: 0.05, multiplier: 2, description: '5% chance to double quest rewards.' },
+                        },
+                        achievements: [ { id: 'quests1', name: 'Quest Novice', desc: 'Complete 10 quests.', condition: state => state.player.stats.questsCompleted >= 10 }, { id: 'quests2', name: 'Quest Adept', desc: 'Complete 50 quests.', condition: state => state.player.stats.questsCompleted >= 50 }, { id: 'gold1', name: 'Gold Hoarder', desc: 'Earn 1,000 total gold.', condition: state => state.player.stats.totalGoldEarned >= 1000 }, { id: 'level1', name: 'Level Up!', desc: 'Reach player level 5.', condition: state => state.player.level >= 5 }, { id: 'streak1', name: 'On a Roll', desc: 'Maintain a 3-day streak.', condition: state => state.player.streak >= 3 }, ],
+                        dailyQuestPool: [ { name: 'Read for 15 minutes', category: 'Learning', xp: 20 }, { name: 'Go for a 10-minute walk', category: 'Fitness', xp: 25 }, { name: 'Tidy one area for 5 minutes', category: 'Chores', xp: 15 }, ],
+                        weeklyQuestPool: [ { id: 'wq1', name: 'Complete 15 Quests', xp: 500, target: 15, condition: state => state.player.stats.questsCompletedThisWeek >= 15 }, { id: 'wq2', name: 'Earn 500 Gold', xp: 400, target: 500, condition: state => state.player.stats.goldEarnedThisWeek >= 500 }, ],
+                        heroJourney: [
+                            { id: 'hj1', name: 'The First Step', desc: 'Reach Player Level 5.', condition: state => state.player.level >= 5, reward: { type: 'passive_gold_bonus', value: 0.01 }, rewardDesc: "+1% to all Gold gains." },
+                            { id: 'hj2', name: 'Master of the Mundane', desc: "Reach Level 10 in the 'Chores' skill.", condition: state => state.skills['Chores'] && state.skills['Chores'].level >= 10, reward: { type: 'passive_daily_xp_bonus', value: 0.1 }, rewardDesc: "Daily quests are worth 10% more XP." },
+                            { id: 'hj3', name: "The Dragon's Hoard", desc: 'Earn a total of 2,500 Gold.', condition: state => state.player.stats.totalGoldEarned >= 2500, reward: { type: 'avatar_unlock', value: 'gold_dragon' }, rewardDesc: "Unlock the Gold Dragon avatar." },
+                            { id: 'hj4', name: "The Sage's Wisdom", desc: 'Complete 100 quests.', condition: state => state.player.stats.questsCompleted >= 100, reward: { type: 'passive_xp_bonus', value: 0.02 }, rewardDesc: "+2% to all XP gains." },
+                        ],
+                        travelingMerchantItems: [
+                            { id: 'item1', name: 'Potion of Swift Learning', desc: "+25% XP from 'Learning' quests for 24 hours.", cost: 150, duration: 24, effect: { type: 'xp_boost', category: 'Learning', value: 0.25 }, icon: '🧪' },
+                            { id: 'item2', name: 'Elixir of Strength', desc: "+25% XP from 'Fitness' quests for 24 hours.", cost: 150, duration: 24, effect: { type: 'xp_boost', category: 'Fitness', value: 0.25 }, icon: '🧪' },
+                            { id: 'item3', name: 'Draught of Creativity', desc: "+25% XP from 'Creative' quests for 24 hours.", cost: 150, duration: 24, effect: { type: 'xp_boost', category: 'Creative', value: 0.25 }, icon: '🧪' },
+                            { id: 'item4', name: 'Amulet of Prosperity', desc: 'Permanently gain +1 Gold from every quest.', cost: 1000, duration: Infinity, effect: { type: 'gold_flat_bonus', value: 1 }, icon: '💎' },
+                            { id: 'item5', name: 'Scroll of Fortune', desc: '+10% Gold from all quests for 48 hours.', cost: 200, duration: 48, effect: { type: 'gold_boost', value: 0.1 }, icon: '📜' }
+                        ],
+                        avatars: {
+                            knight: `data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIGZpbGw9IiMxRjI5MzkiLz48cmVjdCB4PSI4IiB5PSIyIiB3aWR0aD0iOCIgaGVpZ2h0PSIyIiBmaWxsPSIjQzhDNUM2Ii8+PHJlY3QgeD0iOCIgeT0iNCIgd2lkdGg9IjgiIGhlaWdodD0iNiIgZmlsbD0iIzUzNUU1QiIvPjxyZWN0IHg9IjEwIiB5PSI2IiB3aWR0aD0iNCIgaGVpZ2h0PSIyIiBmaWxsPSIjM0Q0NTUwIi8+PHJlY3QgeD0iNiIgeT0iMTAiIHdpZHRoPSIxMiIgaGVpZ2h0PSI0IiBmaWxsPSIjNTM1RUY1Ii8+PHJlY3QgeD0iNiIgeT0iMTQiIHdpZHRoPSIzIiBoZWlnaHQ9IjYiIGZpbGw9IiM1MzVFRjUiLz48cmVjdCB4PSIxNSIgeT0iMTQiIHdpZHRoPSIzIiBoZWlnaHQ9IjYiIGZpbGw9IiM1MzVFRjUiLz48cmVjdCB4PSI5IiB5PSIxNCIgd2lkdGg9IjYiIGhlaWdodD0iNiIgZmlsbD0iIzQ2NTE1OSIvPjxyZWN0IHg9IjYiIHk9IjIwIiB3aWR0aD0iMyIgaGVpZ2h0PSIyIiBmaWxsPSIjM0Q0NTUwIi8+PHJlY3QgeD0iMTUiIHk9IjIwIiB3aWR0aD0iMyIgaGVpZ2h0PSIyIiBmaWxsPSIjM0Q0NTUwIi8+PC9zdmc+`,
+                            mage: `data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIGZpbGw9IiMxRjI5MzkiLz48cGF0aCBkPSJNNiAyTDEyIDZMMTggMkwxMiAxMFYyWiIgZmlsbD0iIzRGNzVFOSIvPjxyZWN0IHg9IjgiIHk9IjEwIiB3aWR0aD0iOCIgaGVpZ2h0PSIyIiBmaWxsPSIjRkZENUI4Ii8+PHJlY3QgeD0iNiIgeT0iMTIiIHdpZHRoPSIxMiIgaGVpZ2h0PSI4IiBmaWxsPSIjNEY3NUU5Ii8+PHJlY3QgeD0iOCIgeT0iMjAiIHdpZHRoPSI4IiBoZWlnaHQ9IjIiIGZpbGw9IiM0QzUwMzkiLz48L3N2Zz4=`,
+                            archer: `data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIGZpbGw9IiMxRjI5MzkiLz48cmVjdCB4PSI4IiB5PSIyIiB3aWR0aD0iOCIgaGVpZ2h0PSIyIiBmaWxsPSIjRkY1RDc4Ii8+PHJlY3QgeD0iOCIgeT0iNCIgd2lkdGg9IjgiIGhlaWdodD0iNiIgZmlsbD0iIzJFN0Q0QyIvPjxyZWN0IHg9IjEwIiB5PSI2IiB3aWR0aD0iNCIgaGVpZ2h0PSIyIiBmaWxsPSIjMkM2QTQwIi8+PHJlY3QgeD0iNiIgeT0iMTAiIHdpZHRoPSIxMiIgaGVpZ2h0PSI4IiBmaWxsPSIjMkU3RDRDIi8+PHJlY3QgeD0iNiIgeT0iMTgiIHdpZHRoPSIzIiBoZWlnaHQ9IjQiIGZpbGw9IiM2QjQyMkYiLz48cmVjdCB4PSIxNSIgeT0iMTgiIHdpZHRoPSIzIiBoZWlnaHQ9IjQiIGZpbGw9IiM2QjQyMkYiLz48cmVjdCB4PSI5IiB5PSIxOCIgd2lkdGg9IjYiIGhlaWdodD0iNCIgZmlsbD0iIzVCMzgzMSIvPjwvc3ZnPg==`,
+                            gold_dragon: `data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIGZpbGw9IiMxRjI5MzkiLz48cGF0aCBkPSJNMyAxMkw4IDdMMTMgMTJMOCAxN1oiIGZpbGw9IiNGQUMxNUMiLz48cGF0aCBkPSJNMTMgMTJMMTggN0wyMyAxMkwxOCAxN1oiIGZpbGw9IiNGOUExMkIiLz48cmVjdCB4PSI4IiB5PSIyIiB3aWR0aD0iOCIgaGVpZ2h0PSI1IiBmaWxsPSIjRkFDMTVDIi8+PC9zdmc+`
+                        },
+                    };
+                },
+
+                getDefaultState() {
+                    return JSON.parse(JSON.stringify({ // Deep copy to prevent mutation
+                        character: { name: 'Hero', avatar: 'knight', class: 'knight' },
+                        player: { 
+                            level: 1, xp: 0, gold: 0, streak: 0, lastCompletedDate: null, activeBuffs: [],
+                            stats: { 
+                                questsCompleted: 0, totalGoldEarned: 0, totalXpGained: 0, 
+                                questsCompletedThisWeek: 0, goldEarnedThisWeek: 0, skillsLeveledThisWeek: 0,
+                                totalGoldSpent: 0, rewardsClaimed: 0,
+                            } 
+                        },
+                        tasks: [], dailyQuests: [], shop: [], skills: {}, unlockedAchievements: {},
+                        completedTasks: [], customDailies: [], unlockedJourneyChapters: {},
+                        merchant: { dailyDealId: null, weeklyDealId: null, lastStockDate: null },
+                        lastDailyQuestDate: null, weeklyQuest: null, lastWeeklyQuestDate: null,
+                        editing: { type: null, id: null },
+                        settings: { theme: 'dark', sound: true },
+                        uiSettings: {
+                            sortBy: 'id-desc',
+                            filterCategory: 'all',
+                            activeMobileTab: 'quests',
+                            needsDailyQuestClaim: false,
+                            weeklyFocusSkill: null,
+                        }
+                    }));
+                },
+
+                cacheDOM() {
+                    this.dom = {
+                        playerXpBar: document.getElementById('player-xp-bar'), playerXpText: document.getElementById('player-xp-text'), playerGold: document.getElementById('player-gold'), playerStreak: document.getElementById('player-streak'), addTaskForm: document.getElementById('add-task-form'), addRewardForm: document.getElementById('add-reward-form'), xpSlider: document.getElementById('task-xp'), xpSliderValue: document.getElementById('task-xp-value'), skillSuggestions: document.getElementById('skill-suggestions'), taskList: document.getElementById('task-list'), dailyQuestList: document.getElementById('daily-quest-list'), weeklyQuestCard: document.getElementById('weekly-quest-card'), shopList: document.getElementById('shop-list'), skillsList: document.getElementById('skills-list'), heroJourneyList: document.getElementById('hero-journey-list'), playerProfileStats: document.getElementById('player-profile-stats'), achievementsList: document.getElementById('achievements-list'), toastContainer: document.getElementById('toast-container'), confirmationModal: document.getElementById('confirmationModal'), editModal: document.getElementById('editModal'), questLogModal: document.getElementById('questLogModal'), questLogBtn: document.getElementById('quest-log-btn'), statsChartCanvas: document.getElementById('stats-chart'), settingsBtn: document.getElementById('settings-btn'), settingsModal: document.getElementById('settingsModal'), manageDailiesBtn: document.getElementById('manage-dailies-btn'), manageDailiesModal: document.getElementById('manageDailiesModal'), avatarDisplay: document.getElementById('avatar-display'), characterNameInput: document.getElementById('character-name'), characterClass: document.getElementById('character-class'), playerLevel: document.getElementById('player-level'),
+                        playerCard: document.getElementById('player-card'),
+                        activeBuffsContainer: document.getElementById('active-buffs-container'),
+                        travelingMerchantSection: document.getElementById('traveling-merchant-section'),
+                        weeklyFocusText: document.getElementById('weekly-focus-text'),
+                        addSubtaskBtn: document.getElementById('add-subtask-btn'), subtaskNameInput: document.getElementById('subtask-name'), subtasksContainer: document.getElementById('subtasks-container'),
+                        
+                        profileTabs: document.querySelectorAll('.profile-tab'),
+                        profileTabContents: {
+                            weekly: document.getElementById('profile-tab-content-weekly'),
+                            category: document.getElementById('profile-tab-content-category'),
+                            insights: document.getElementById('profile-tab-content-insights'),
+                        },
+                        categoryDonutChartCanvas: document.getElementById('category-donut-chart'),
+                        skillRadarChartCanvas: document.getElementById('skill-radar-chart'),
+                        timeOfDayChartCanvas: document.getElementById('time-of-day-chart'),
+                        productivityHeatmapContainer: document.getElementById('productivity-heatmap'),
+
+                        toggleAdvancedBtn: document.getElementById('toggle-advanced-btn'), advancedOptionsContainer: document.getElementById('advanced-options'),
+                        filterCategory: document.getElementById('filter-category'), sortTasks: document.getElementById('sort-tasks'),
+                        mobileTabBar: document.getElementById('mobile-tab-bar'),
+                        mobilePanels: {
+                            dashboard: document.getElementById('mobile-panel-dashboard'),
+                            quests: document.getElementById('mobile-panel-quests'),
+                            shop: document.getElementById('mobile-panel-shop'),
+                        },
+                        taskRecurrence: document.getElementById('task-recurrence'),
+                        recurrenceOptions: document.getElementById('recurrence-options'),
+                    };
+                },
+
+                bindEvents() {
+                    // Forms
+                    this.dom.addTaskForm.addEventListener('submit', e => this.handleAddTask(e));
+                    this.dom.addRewardForm.addEventListener('submit', e => this.handleAddReward(e));
+
+                    // Main list clicks (delegated)
+                    this.dom.taskList.addEventListener('click', e => this.handleGenericListClick(e));
+                    this.dom.skillsList.addEventListener('click', e => {
+                        const focusButton = e.target.closest('button[data-action="set-focus"]');
+                        if (focusButton) {
+                            this.handleSetFocus(focusButton.dataset.skill);
+                        }
+                    });
+                    this.dom.dailyQuestList.addEventListener('click', e => {
+                        this.handleGenericListClick(e);
+                        if(e.target.closest('button[data-action="claim-dailies"]')) {
+                            this.handleClaimDailies();
+                        }
+                    });
+                    this.dom.shopList.addEventListener('click', e => this.handleGenericListClick(e));
+                    this.dom.travelingMerchantSection.addEventListener('click', e => {
+                        const buyButton = e.target.closest('button[data-action="buy-merchant-item"]');
+                        if(buyButton) this.buyMerchantItem(buyButton.dataset.id);
+                    });
+
+                    // Global clicks (modals, etc. - delegated)
+                    document.body.addEventListener('click', e => {
+                        if (e.target.closest('#settingsCloseBtn')) this.hideModal('settingsModal');
+                        if (e.target.closest('#dailiesCloseBtn')) this.hideModal('manageDailiesModal');
+                        if (e.target.closest('#avatarCloseBtn')) this.hideModal('avatarModal');
+                        if (e.target.closest('#questLogCloseBtn')) this.hideModal('questLogModal');
+                        if (e.target.closest('#editCancelBtn')) this.hideModal('editModal');
+                        if (e.target.closest('#modalCancelBtn')) this.hideModal('confirmationModal');
+
+                        const avatarButton = e.target.closest('button[data-avatar]');
+                        if (avatarButton) this.handleAvatarSelect(avatarButton.dataset.avatar);
+                    });
+                     document.body.addEventListener('submit', e => {
+                        if (e.target.id === 'edit-form') this.handleEditSubmit(e);
+                        if (e.target.id === 'add-daily-form') this.handleAddCustomDaily(e);
+                    });
+
+
+                    // Inputs & Selects
+                    this.dom.xpSlider.addEventListener('input', () => this.dom.xpSliderValue.textContent = `${this.dom.xpSlider.value} XP`);
+                    this.dom.characterNameInput.addEventListener('change', e => this.handleNameChange(e));
+                    this.dom.filterCategory.addEventListener('change', e => this.handleFilterChange(e));
+                    this.dom.sortTasks.addEventListener('change', e => this.handleSortChange(e));
+                    this.dom.taskRecurrence.addEventListener('change', e => this.renderRecurrenceOptions(e.target.value));
+
+                    // Buttons
+                    this.dom.settingsBtn.addEventListener('click', () => this.showModal('settingsModal'));
+                    this.dom.manageDailiesBtn.addEventListener('click', () => this.showModal('manageDailiesModal'));
+                    this.dom.questLogBtn.addEventListener('click', () => this.showModal('questLogModal'));
+                    this.dom.avatarDisplay.addEventListener('click', () => this.showModal('avatarModal'));
+                    this.dom.addSubtaskBtn.addEventListener('click', () => this.handleAddSubtask());
+                    this.dom.subtasksContainer.addEventListener('click', e => this.handleDeleteTempSubtask(e));
+                    
+                    this.dom.profileTabs.forEach(tab => {
+                        tab.addEventListener('click', () => this.switchProfileTab(tab.dataset.tab));
+                    });
+
+                    this.dom.toggleAdvancedBtn.addEventListener('click', () => this.toggleAdvancedOptions());
+                    
+                    // Mobile Nav
+                    this.dom.mobileTabBar.addEventListener('click', e => {
+                        const tabButton = e.target.closest('.mobile-tab');
+                        if (tabButton) this.switchMobileTab(tabButton.dataset.tab);
+                    });
+                },
+                
+                // --- State Management & Data ---
+                listenForFirestoreChanges() {
+                    if (this.unsubscribe) this.unsubscribe();
+                    this.unsubscribe = onSnapshot(this.docRef, (docSnap) => {
+                        if (docSnap.exists()) {
+                            this.updateLocalState(docSnap.data());
+                            this.generateDailyQuests(); 
+                            this.generateWeeklyQuest();
+                            this.generateMerchantDeals();
+                        } else {
+                            console.log("No user data found, creating new document.");
+                            this.state = this.getDefaultState();
+                            this.handleClaimDailies(); 
+                            this.state.uiSettings.needsDailyQuestClaim = false; 
+                            this.generateWeeklyQuest();
+                            this.generateMerchantDeals();
+                            this.saveStateToFirestore(); 
+                        }
+                        this.applyTheme();
+                        this.render();
+                    }, (error) => {
+                        console.error("Firestore listener failed:", error);
+                        this.loadStateFromLocalStorage();
+                        this.render();
+                    });
+                },
+
+                updateLocalState(firestoreData) {
+                    const defaultState = this.getDefaultState();
+                    // Deep merge to ensure all properties from defaultState are present
+                    this.state = {
+                        ...defaultState,
+                        ...firestoreData,
+                        character: { ...defaultState.character, ...(firestoreData.character || {}) },
+                        player: {
+                            ...defaultState.player,
+                            ...(firestoreData.player || {}),
+                            activeBuffs: firestoreData.player && firestoreData.player.activeBuffs ? firestoreData.player.activeBuffs : [],
+                            stats: { ...defaultState.player.stats, ...(firestoreData.player ? (firestoreData.player.stats || {}) : {}) }
+                        },
+                        merchant: { ...defaultState.merchant, ...(firestoreData.merchant || {}) },
+                        settings: { ...defaultState.settings, ...(firestoreData.settings || {}) },
+                        uiSettings: { ...defaultState.uiSettings, ...(firestoreData.uiSettings || {}) },
+                        unlockedJourneyChapters: { ...defaultState.unlockedJourneyChapters, ...(firestoreData.unlockedJourneyChapters || {}) }
+                    };
+                },
+
+                loadStateFromLocalStorage() { 
+                    const savedState = localStorage.getItem('taskQuestState'); 
+                    if (savedState) { this.state = JSON.parse(savedState); }
+                },
+                
+                async saveStateToFirestore() {
+                    if (!this.docRef) {
+                        localStorage.setItem('taskQuestState', JSON.stringify(this.state));
+                        return;
+                    }
+                    try {
+                        // Deep copy state to avoid serializing functions or other non-plain objects
+                        const stateToSave = JSON.parse(JSON.stringify(this.state));
+                        await setDoc(this.docRef, stateToSave);
+                    } catch (error) {
+                        console.error("Error saving state to Firestore:", error);
+                    }
+                },
+
+                saveStateDebounced() {
+                    if (this.saveTimeout) clearTimeout(this.saveTimeout);
+                    this.saveTimeout = setTimeout(() => this.saveStateToFirestore(), 1500);
+                },
+
+                // --- Core Game Logic ---
+                completeTask(taskId, element, isDaily = false) {
+                    const taskList = isDaily ? this.state.dailyQuests : this.state.tasks;
+                    const taskIndex = taskList.findIndex(t => t.id === taskId);
+                    if (taskIndex === -1) return;
+                    
+                    const task = { ...taskList[taskIndex] };
+
+                    // --- Reward Calculation ---
+                    const { finalXp, goldGained, rewardsLogHtml } = this.calculateRewards(task, isDaily);
+
+                    // Animate base rewards
+                    this.animateRewardGain(element, `+${Math.round(finalXp)} XP`, 'xp');
+                    setTimeout(() => {
+                        this.animateRewardGain(element, `+${Math.round(goldGained)} G`, 'gold');
+                        this.audio.playCoin();
+                    }, 200);
+                    
+                    
+                    // --- Animation & State Update Logic ---
+                    const isRecurring = task.recurrence && task.recurrence.type !== 'none';
+                    if (!isRecurring && !isDaily) {
+                        element.classList.add('anim-fade-out');
+                    } else {
+                        element.classList.add('quest-complete-flash');
+                        element.addEventListener('animationend', () => {
+                            element.classList.remove('quest-complete-flash');
+                        }, { once: true });
+                    }
+
+                    const onComplete = () => {
+                        this.applyRewards(task, finalXp, goldGained, rewardsLogHtml, isDaily);
+                        const allRewardsHtml = this.processPostCompletion(task, finalXp, goldGained, rewardsLogHtml);
+                        this.showToast(...allRewardsHtml);
+                        this.render();
+                    };
+
+                    if (!isRecurring && !isDaily) {
+                        element.addEventListener('animationend', onComplete, { once: true });
+                    } else {
+                        onComplete(); // No animation for removal, but flash still happens
+                    }
+                },
+                
+                calculateRewards(task, isDaily = false) {
+                    let finalXp = task.xp;
+                    let goldGained = this.config.goldForTask(finalXp);
+                    let rewardsLogHtml = '';
+
+                    // --- Check and Apply Active Buffs ---
+                    this.checkActiveBuffs(); // Remove expired buffs
+                    this.state.player.activeBuffs.forEach(buff => {
+                        const item = this.config.travelingMerchantItems.find(i => i.id === buff.id);
+                        if (!item) return;
+
+                        if (item.effect.type === 'xp_boost' && item.effect.category === task.category) {
+                            const bonusXp = Math.round(finalXp * item.effect.value);
+                            finalXp += bonusXp;
+                            rewardsLogHtml += `<p><span class="text-green-400 font-semibold">+${bonusXp} XP (${item.name})</span></p>`;
+                        }
+                        if (item.effect.type === 'gold_boost') {
+                            const bonusGold = Math.round(goldGained * item.effect.value);
+                            goldGained += bonusGold;
+                            rewardsLogHtml += `<p><span class="gold-text font-semibold">+${bonusGold} G (${item.name})</span></p>`;
+                        }
+                        if (item.effect.type === 'gold_flat_bonus') {
+                            goldGained += item.effect.value;
+                        }
+                    });
+
+                    // --- Apply Weekly Focus Bonus ---
+                    const focusSkill = this.state.uiSettings.weeklyFocusSkill;
+                    if (focusSkill && task.category === focusSkill) {
+                        const bonusXp = Math.round(finalXp * 0.1);
+                        finalXp += bonusXp;
+                        rewardsLogHtml += `<p><span class="text-yellow-400 font-semibold">+${bonusXp} XP (Focus Bonus!)</span></p>`;
+                    }
+
+                    const { class: playerClass } = this.state.character;
+                    const classBonus = this.config.classBonuses[playerClass];
+
+                    if (classBonus.type === 'xp' && classBonus.categories.includes(task.category)) {
+                        const bonusXp = Math.round(finalXp * (classBonus.multiplier - 1));
+                        finalXp += bonusXp;
+                        rewardsLogHtml += `<p><span class="text-purple-400 font-semibold">+${bonusXp} XP (Mage Bonus!)</span></p>`;
+                    }
+                    if (classBonus.type === 'gold' && classBonus.categories.includes(task.category)) {
+                        const bonusGold = Math.round(goldGained * (classBonus.multiplier - 1));
+                        goldGained += bonusGold;
+                        rewardsLogHtml += `<p><span class="gold-text font-semibold">+${bonusGold} G (Knight Bonus!)</span></p>`;
+                    }
+                    if (classBonus.type === 'crit' && Math.random() < classBonus.chance) {
+                        finalXp *= classBonus.multiplier;
+                        goldGained *= classBonus.multiplier;
+                        rewardsLogHtml += `<p><span class="text-red-400 font-bold">CRITICAL SUCCESS! Rewards Doubled! (Archer)</span></p>`;
+                    }
+
+                    // --- Apply Hero's Journey Bonuses ---
+                    const journey = this.config.heroJourney;
+                    if (this.state.unlockedJourneyChapters[journey[0].id]) { // +1% Gold
+                         goldGained *= (1 + journey[0].reward.value);
+                    }
+                    if (isDaily && this.state.unlockedJourneyChapters[journey[1].id]) { // +10% Daily XP
+                         finalXp *= (1 + journey[1].reward.value);
+                    }
+                    if (this.state.unlockedJourneyChapters[journey[3].id]) { // +2% XP
+                         finalXp *= (1 + journey[3].reward.value);
+                    }
+
+
+                    finalXp = Math.round(finalXp * this.config.priorityMultiplier[task.priority || 'medium']);
+
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+                    if (task.dueDate) {
+                        const dueDate = new Date(task.dueDate + 'T00:00:00');
+                        if (today <= dueDate) {
+                            const bonusXp = Math.round(task.xp * 0.1);
+                            finalXp += bonusXp;
+                            rewardsLogHtml += `<p><span class="text-green-400 font-semibold">+${bonusXp} XP (On-time bonus!)</span></p>`;
+                        }
+                    }
+
+                    return { finalXp, goldGained, rewardsLogHtml };
+                },
+
+                applyRewards(task, finalXp, goldGained, rewardsLogHtml, isDaily) {
+                    const isRecurring = task.recurrence && task.recurrence.type !== 'none';
+                    if (isDaily) {
+                        const dailyInState = this.state.dailyQuests.find(q => q.id === task.id);
+                        if (dailyInState) dailyInState.completed = true;
+                    } else if (isRecurring) {
+                        const taskInState = this.state.tasks.find(t => t.id === task.id);
+                        if (taskInState) taskInState.lastCompleted = new Date().toISOString().split('T')[0];
+                    } else {
+                        this.state.tasks = this.state.tasks.filter(t => t.id !== task.id);
+                    }
+
+                    this.state.completedTasks.unshift({ ...task, completedAt: new Date().toISOString(), finalXp, goldGained, rewardsLogHtml });
+                    this.ensureSkillExists(task.category);
+
+                    this.state.player.xp += finalXp;
+                    this.state.player.gold += goldGained;
+                    this.state.skills[task.category].xp += finalXp;
+
+                    const stats = this.state.player.stats;
+                    stats.questsCompleted++;
+                    stats.totalGoldEarned += goldGained;
+                    stats.totalXpGained += finalXp;
+                    stats.questsCompletedThisWeek++;
+                    stats.goldEarnedThisWeek += goldGained;
+                },
+
+                processPostCompletion(task, finalXp, goldGained, rewardsLogHtml) {
+                    const streakResult = this.updateStreak();
+                    const playerLevelResult = this.checkPlayerLevelUp();
+                    const skillLevelResult = this.checkSkillLevelUp(task.category);
+
+                    let fullRewardsHtml = rewardsLogHtml.replace(/<p>|<\/p>/g, '');
+                    fullRewardsHtml += `<span class="text-accent-primary font-semibold">+${Math.round(finalXp)} XP</span> <span class="gold-text font-semibold">+${Math.round(goldGained)} G</span>`;
+                    if (streakResult && streakResult.bonusXP > 0) {
+                        fullRewardsHtml += ` <span class="streak-text font-semibold">🔥 Streak ${streakResult.newStreak} (+${Math.round(streakResult.bonusXP)} XP, +${Math.round(streakResult.bonusGold)} G)</span>`;
+                    }
+
+                    let toastTitle = 'Quest Complete!';
+                    let toastType = 'success';
+                    this.audio.playComplete();
+
+                    if (playerLevelResult) {
+                        toastTitle = `LEVEL UP! You are now Level ${playerLevelResult.newLevel}!`;
+                        toastType = 'levelup';
+                    } else if (skillLevelResult) {
+                        toastTitle = `${skillLevelResult.category} Skill Up! (Lvl ${skillLevelResult.newLevel})`;
+                        toastType = 'levelup';
+                    }
+
+                    this.checkAchievements();
+                    this.checkHeroJourney();
+                    this.checkWeeklyQuestProgress();
+
+                    return [toastTitle, fullRewardsHtml, toastType];
+                },
+
+                checkPlayerLevelUp() {
+                    let requiredXp = this.config.xpForLevel(this.state.player.level);
+                    let leveledUp = false;
+                    while (this.state.player.xp >= requiredXp) {
+                        leveledUp = true;
+                        this.state.player.level++;
+                        this.state.player.xp -= requiredXp;
+                        requiredXp = this.config.xpForLevel(this.state.player.level);
+                    }
+                    if (leveledUp) {
+                        this.dom.avatarDisplay.classList.add("level-up-animation");
+                        this.dom.playerCard.classList.add("card-flash");
+                        this.audio.playLevelUp();
+                        setTimeout(() => {
+                            this.dom.avatarDisplay.classList.remove("level-up-animation");
+                            this.dom.playerCard.classList.remove("card-flash");
+                        }, 1500);
+                        return { newLevel: this.state.player.level };
+                    }
+                    return null;
+                },
+
+                checkSkillLevelUp(category) {
+                    const skill = this.state.skills[category];
+                    if (!skill) return null;
+                    let requiredXp = this.config.xpForLevel(skill.level);
+                    let leveledUp = false;
+                    while (skill.xp >= requiredXp) {
+                        leveledUp = true;
+                        skill.level++;
+                        skill.xp -= requiredXp;
+                        requiredXp = this.config.xpForLevel(skill.level);
+                    }
+                    if (leveledUp) {
+                        this.state.player.stats.skillsLeveledThisWeek++;
+                        return { category: category, newLevel: skill.level };
+                    }
+                    return null;
+                },
+
+                // --- Event Handlers ---
+                handleAddTask(e) { 
+                    e.preventDefault(); 
+                    const form = this.dom.addTaskForm; 
+                    const name = form.querySelector('#task-name').value.trim(); 
+                    const category = form.querySelector('#task-category').value.trim(); 
+                    const priority = form.querySelector('#task-priority').value; 
+                    const dueDate = form.querySelector('#task-due-date').value; 
+                    const xp = parseInt(this.dom.xpSlider.value); 
+                    if (!name || !category) return; 
+
+                    const recurrenceType = this.dom.taskRecurrence.value;
+                    let recurrence = null;
+                    if (recurrenceType !== 'none') {
+                        recurrence = { type: recurrenceType };
+                        if (recurrenceType === 'weekly') {
+                            recurrence.days = Array.from(document.querySelectorAll('[name="recurrence-weekly-day"]:checked')).map(el => parseInt(el.value));
+                        } else if (recurrenceType === 'monthly') {
+                            recurrence.day = parseInt(document.getElementById('recurrence-monthly-day').value);
+                        }
+                    }
+
+                    const newTask = { id: Date.now(), name, category, xp, priority, dueDate: dueDate || null, subtasks: [...this.tempSubtasks], isNew: true, recurrence, lastCompleted: null }; 
+                    
+                    this.state.tasks.push(newTask); 
+                    this.ensureSkillExists(category); 
+                    this.showToast('Quest Added', `<span class="text-accent-primary font-semibold">+${xp} XP</span>`, 'success'); 
+                    this.audio.playAddTask(); 
+                    this.tempSubtasks = []; 
+                    this.renderTempSubtasks(); 
+                    this.render(); 
+                    form.reset(); 
+                    this.renderRecurrenceOptions('none');
+                    this.dom.xpSliderValue.textContent = '50 XP'; 
+                    setTimeout(() => { newTask.isNew = false; }, 500); 
+                },
+                
+                handleGenericListClick(e) {
+                    const button = e.target.closest('button[data-action]');
+                    const checkbox = e.target.closest('input[type="checkbox"][data-action]');
+
+                    if (button) {
+                        const action = button.dataset.action;
+                        const id = button.dataset.id; 
+
+                        switch(action) {
+                            case 'complete-task': {
+                                const taskEl = button.closest('[data-task-id]');
+                                const isDaily = taskEl.closest('#daily-quest-list') !== null;
+                                this.completeTask(Number(id), taskEl, isDaily);
+                                break;
+                            }
+                            case 'delete-task': {
+                                const task = this.state.tasks.find(t => t.id === Number(id));
+                                if (task) this.showModal('confirmationModal', 'Delete Quest?', `Are you sure you want to delete "${task.name}"?`, () => this.deleteTask(Number(id)));
+                                break;
+                            }
+                            case 'edit-task':
+                                this.showEditModal('task', Number(id));
+                                break;
+                            case 'buy-reward':
+                                this.buyReward(Number(id));
+                                break;
+                            case 'delete-reward': {
+                                const reward = this.state.shop.find(r => r.id === Number(id));
+                                if (reward) this.showModal('confirmationModal', 'Delete Reward?', `Are you sure you want to delete "${reward.name}"?`, () => this.deleteReward(Number(id)));
+                                break;
+                            }
+                            case 'edit-reward':
+                                this.showEditModal('reward', Number(id));
+                                break;
+                        }
+                    }
+
+                    if (checkbox && checkbox.dataset.action === 'toggle-subtask') {
+                        const taskId = Number(checkbox.dataset.taskId);
+                        const subtaskIndex = Number(checkbox.dataset.subtaskIndex);
+                        this.toggleSubtask(taskId, subtaskIndex);
+                    }
+                },
+
+                handleSetFocus(skillName) {
+                    const currentFocus = this.state.uiSettings.weeklyFocusSkill;
+                    this.state.uiSettings.weeklyFocusSkill = currentFocus === skillName ? null : skillName;
+                    this.render();
+                },
+
+                handleEditSubmit(e) {
+                    e.preventDefault();
+                    const { type, id } = this.state.editing;
+                    if (type === 'task') {
+                        const task = this.state.tasks.find(t => t.id === id);
+                        if (task) {
+                            task.name = document.getElementById('edit-name').value;
+                            task.category = document.getElementById('edit-category').value;
+                            task.xp = parseInt(document.getElementById('edit-xp').value);
+                        }
+                    } else if (type === 'reward') {
+                        const reward = this.state.shop.find(r => r.id === id);
+                        if (reward) {
+                            reward.name = document.getElementById('edit-name').value;
+                            reward.cost = parseInt(document.getElementById('edit-cost').value);
+                        }
+                    }
+                    this.render();
+                    this.hideModal('editModal');
+                },
+                
+                // --- Rendering ---
+                async render() {
+                    this.renderPlayerStats();
+                    this.renderTasks();
+                    this.renderDailyQuests();
+                    this.renderWeeklyQuest();
+                    this.renderHeroJourney();
+                    this.renderSkills();
+                    this.renderShop();
+                    this.renderPlayerProfile();
+                    this.renderAchievements();
+                    this.renderStatsChart();
+                    this.renderCategoryDonutChart();
+                    this.renderSkillRadarChart();
+                    this.renderTimeOfDayChart();
+                    this.renderProductivityHeatmap();
+                    this.renderCharacter();
+                    this.renderActiveBuffs();
+                    this.saveStateDebounced();
+                },
+
+                renderPlayerStats() {
+                    const { level, xp, gold, streak } = this.state.player;
+                    const requiredXp = this.config.xpForLevel(level);
+                    this.dom.playerLevel.textContent = level;
+                    this.dom.playerXpText.textContent = `${Math.round(xp)} / ${requiredXp}`;
+                    this.dom.playerXpBar.style.width = `${(xp / requiredXp) * 100}%`;
+                    this.dom.playerGold.textContent = `${Math.round(gold)} G`;
+                    this.dom.playerStreak.textContent = `🔥 ${streak}`;
+                    
+                    const focusSkill = this.state.uiSettings.weeklyFocusSkill;
+                    if (focusSkill) {
+                        this.dom.weeklyFocusText.innerHTML = `Weekly Focus: <span class="underline">${focusSkill}</span>`;
+                    } else {
+                        this.dom.weeklyFocusText.innerHTML = '';
+                    }
+                },
+                
+                renderTasks() { 
+                    this.renderFilterOptions();
+                    
+                    let tasksToDisplay = [...this.state.tasks].filter(task => this.isQuestActiveToday(task));
+
+                    const { filterCategory, sortBy } = this.state.uiSettings;
+
+                    if (filterCategory !== 'all') {
+                        tasksToDisplay = tasksToDisplay.filter(task => task.category === filterCategory);
+                    }
+
+                    const priorityMap = { high: 3, medium: 2, low: 1 };
+                    tasksToDisplay.sort((a, b) => {
+                        switch (sortBy) {
+                            case 'id-asc': return a.id - b.id;
+                            case 'priority-desc': return (priorityMap[b.priority] || 0) - (priorityMap[a.priority] || 0);
+                            case 'priority-asc': return (priorityMap[a.priority] || 0) - (priorityMap[b.priority] || 0);
+                            case 'due-date-asc':
+                                if (!a.dueDate) return 1;
+                                if (!b.dueDate) return -1;
+                                return new Date(a.dueDate) - new Date(b.dueDate);
+                            case 'xp-desc': return b.xp - a.xp;
+                            default: return b.id - a.id; // id-desc
+                        }
+                    });
+
+                    this.renderQuestList(this.dom.taskList, tasksToDisplay, false); 
+                },
+
+                renderDailyQuests() {
+                    if (this.state.uiSettings.needsDailyQuestClaim) {
+                        this.dom.dailyQuestList.innerHTML = `
+                            <div class="empty-state-container text-center p-4 anim-fade-in">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mb-4 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                <h3 class="text-xl font-semibold mb-2">A New Day Awaits!</h3>
+                                <p class="text-text-secondary mb-4">Your previous daily quests have concluded. Embark on a new set of adventures!</p>
+                                <button data-action="claim-dailies" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition duration-300 transform hover:scale-105">
+                                    Claim Today's Quests
+                                </button>
+                            </div>
+                        `;
+                    } else {
+                        this.renderQuestList(this.dom.dailyQuestList, this.state.dailyQuests, true);
+                    }
+                },
+
+                renderQuestList(container, list, isDaily) {
+                    if (list.length === 0) {
+                        const emptyState = `<div class="empty-state-container text-sm text-gray-400">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                            <h3 class="font-semibold mt-2">No Quests Here</h3>
+                            <p class="mt-1">${isDaily ? "Your daily quests await tomorrow's dawn." : "Add a new quest to begin your adventure."}</p>
+                        </div>`;
+                        container.innerHTML = emptyState;
+                        return;
+                    }
+
+                    container.innerHTML = list.map(task => { 
+                        const isRecurring = !!task.recurrence && task.recurrence.type !== 'none';
+                        const isCompletedToday = isDaily ? task.completed : (isRecurring && task.lastCompleted === new Date().toISOString().split('T')[0]);
+                        
+                        const subtasksHtml = (task.subtasks && task.subtasks.length > 0) ? `<div class="mt-2 space-y-1 pl-4">${task.subtasks.map((sub, i) => `
+                            <div class="flex items-center text-sm">
+                                <input type="checkbox" id="subtask-${task.id}-${i}" data-action="toggle-subtask" data-task-id="${task.id}" data-subtask-index="${i}" ${sub.completed ? 'checked' : ''} class="mr-2 h-4 w-4 rounded">
+                                <label for="subtask-${task.id}-${i}" class="${sub.completed ? 'line-through text-gray-500' : ''}">${sub.text}</label>
+                            </div>`).join('')}</div>` : '';
+                        
+                        const canComplete = !task.subtasks || task.subtasks.length === 0 || task.subtasks.every(st => st.completed);
+                        
+                        return `
+                        <div data-task-id="${task.id}" class="bg-themed p-3 rounded-lg flex flex-col items-stretch ${task.isNew ? 'anim-fade-in' : ''} ${isCompletedToday ? 'opacity-50' : ''} ${!isDaily ? `priority-${task.priority || 'medium'}` : ''}">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <p class="font-semibold ${isCompletedToday ? 'line-through' : ''}">${task.name}</p>
+                                    <div class="mt-1">
+                                         <span class="text-xs font-bold text-accent-primary bg-blue-500/10 px-2 py-1 rounded-full">${task.xp} XP</span>
+                                    </div>
+                                </div>
+                                <div class="flex gap-1 flex-shrink-0 pl-2">
+                                    ${!isDaily ? `
+                                    <button data-id="${task.id}" data-action="edit-task" class="p-2 rounded-full hover:bg-blue-500/20"><svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="pointer-events:none;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L15.232 5.232z"></path></svg></button>
+                                    <button data-id="${task.id}" data-action="delete-task" class="p-2 rounded-full hover:bg-red-500/20"><svg class="w-4 h-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="pointer-events:none;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>` : ''}
+                                    <button data-id="${task.id}" data-action="complete-task" class="bg-green-600 hover:bg-green-700 text-white font-bold p-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed" ${isCompletedToday || !canComplete ? 'disabled' : ''}>
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="pointer-events:none;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                                    </button>
+                                </div>
+                            </div>
+                            ${subtasksHtml}
+                        </div>`;
+                    }).join('');
+                },
+                
+                updateStreak() {
+                    const today = new Date().toDateString();
+                    if (this.state.player.lastCompletedDate === today) return null;
+
+                    const yesterday = new Date();
+                    yesterday.setDate(yesterday.getDate() - 1);
+
+                    if (this.state.player.lastCompletedDate === yesterday.toDateString()) {
+                        this.state.player.streak++;
+                    } else {
+                        this.state.player.streak = 1;
+                    }
+                    this.state.player.lastCompletedDate = today;
+
+                    const streakBonusXP = 10 * this.state.player.streak;
+                    const streakBonusGold = 5 * this.state.player.streak;
+                    this.state.player.xp += streakBonusXP;
+                    this.state.player.gold += streakBonusGold;
+
+                    return { newStreak: this.state.player.streak, bonusXP: streakBonusXP, bonusGold: streakBonusGold };
+                },
+                
+                generateDailyQuests() {
+                    const today = new Date().toDateString();
+                    if (this.state.lastDailyQuestDate === today) {
+                        // It's the same day. If quests are empty AND we are not in a 'claim' state,
+                        // it's an error/inconsistent state. Let's force a claim to fix it.
+                        if (!this.state.dailyQuests || (this.state.dailyQuests.length === 0 && !this.state.uiSettings.needsDailyQuestClaim)) {
+                             this.state.uiSettings.needsDailyQuestClaim = true;
+                        }
+                        return; // Otherwise, do nothing for the same day.
+                    }
+
+                    // It's a new day, so trigger a claim.
+                    this.state.lastDailyQuestDate = today;
+                    this.state.dailyQuests = [];
+                    this.state.uiSettings.needsDailyQuestClaim = true;
+                },
+
+                handleClaimDailies() {
+                    const pool = [...this.config.dailyQuestPool, ...this.state.customDailies];
+                    const shuffled = pool.sort(() => 0.5 - Math.random());
+                    const newQuests = shuffled.slice(0, 3).map((q, i) => ({ ...q, id: Date.now() + i, completed: false, isNew: true }));
+
+                    this.state.dailyQuests = newQuests;
+                    this.state.uiSettings.needsDailyQuestClaim = false;
+                    this.audio.playCoin();
+                    this.render();
+                    setTimeout(() => {
+                        this.state.dailyQuests.forEach(q => q.isNew = false);
+                    }, 500);
+                },
+
+                generateWeeklyQuest() {
+                    const currentWeekId = this.getWeekId(new Date());
+
+                    // If it's the same week AND a quest already exists, just check progress and exit.
+                    if (this.state.lastWeeklyQuestDate === currentWeekId && this.state.weeklyQuest) {
+                        this.checkWeeklyQuestProgress();
+                        return;
+                    }
+
+                    // If we reach here, it's either a new week OR the same week but the quest is missing.
+                    // In either case, we generate a new quest.
+
+                    // Only reset weekly stats if it's actually a new week.
+                    if (this.state.lastWeeklyQuestDate !== currentWeekId) {
+                        this.state.player.stats.questsCompletedThisWeek = 0;
+                        this.state.player.stats.goldEarnedThisWeek = 0;
+                        this.state.player.stats.skillsLeveledThisWeek = 0;
+                        this.state.uiSettings.weeklyFocusSkill = null; // Reset weekly focus
+                    }
+                    
+                    const randomIndex = Math.floor(Math.random() * this.config.weeklyQuestPool.length);
+                    const newQuestTemplate = this.config.weeklyQuestPool[randomIndex];
+                    this.state.weeklyQuest = { id: newQuestTemplate.id, completed: false };
+                    this.state.lastWeeklyQuestDate = currentWeekId;
+                },
+
+                generateMerchantDeals() {
+                    const today = new Date().toDateString();
+                    if (this.state.merchant.lastStockDate === today) return;
+
+                    const allItems = this.config.travelingMerchantItems;
+                    const consumables = allItems.filter(i => i.duration !== Infinity);
+                    const permanent = allItems.filter(i => i.duration === Infinity);
+
+                    // New daily deal
+                    const dailyCandidates = consumables.filter(i => i.id !== this.state.merchant.dailyDealId);
+                    this.state.merchant.dailyDealId = dailyCandidates[Math.floor(Math.random() * dailyCandidates.length)].id;
+                    
+                    // New weekly deal (if it's a new week)
+                    const currentWeekId = this.getWeekId(new Date());
+                    if (this.state.merchant.lastStockWeekId !== currentWeekId) {
+                        const weeklyCandidates = permanent.filter(i => i.id !== this.state.merchant.weeklyDealId);
+                         if (weeklyCandidates.length > 0) {
+                            this.state.merchant.weeklyDealId = weeklyCandidates[Math.floor(Math.random() * weeklyCandidates.length)].id;
+                        }
+                        this.state.merchant.lastStockWeekId = currentWeekId;
+                    }
+
+                    this.state.merchant.lastStockDate = today;
+                },
+
+                getWeekId(date) {
+                    const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+                    d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
+                    const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+                    const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+                    return `${d.getUTCFullYear()}-W${weekNo}`;
+                },
+
+                checkWeeklyQuestProgress() {
+                    if (!this.state.weeklyQuest || this.state.weeklyQuest.completed) return;
+                    const questConfig = this.config.weeklyQuestPool.find(q => q.id === this.state.weeklyQuest.id);
+                    if (questConfig && questConfig.condition(this.state)) {
+                        this.state.weeklyQuest.completed = true;
+                        this.state.player.xp += questConfig.xp;
+                        const goldReward = this.config.goldForTask(questConfig.xp);
+                        this.state.player.gold += goldReward;
+                        this.showToast("EPIC QUEST COMPLETE!", `+${questConfig.xp} XP & +${goldReward} G`, "levelup");
+                        this.checkPlayerLevelUp();
+                        this.render(); // Re-render to show completion
+                    }
+                },
+                
+                checkAchievements() {
+                    this.config.achievements.forEach(ach => {
+                        if (!this.state.unlockedAchievements[ach.id] && ach.condition(this.state)) {
+                            this.state.unlockedAchievements[ach.id] = new Date().toLocaleDateString();
+                            this.showToast("🏆 Achievement Unlocked", `${ach.name}`, "levelup");
+                            this.audio.playAchievement();
+                        }
+                    });
+                },
+                 checkHeroJourney() {
+                    this.config.heroJourney.forEach(chapter => {
+                        if (!this.state.unlockedJourneyChapters[chapter.id] && chapter.condition(this.state)) {
+                            this.state.unlockedJourneyChapters[chapter.id] = new Date().toLocaleDateString();
+                            this.showToast("✨ Hero's Journey", `Chapter Unlocked: ${chapter.name}`, "levelup");
+                            this.audio.playAchievement();
+                        }
+                    });
+                },
+                
+                renderCharacter() {
+                    this.dom.characterNameInput.value = this.state.character.name;
+                    this.dom.avatarDisplay.style.backgroundImage = `url(${this.config.avatars[this.state.character.avatar]})`;
+                    this.dom.characterClass.textContent = this.state.character.class;
+                },
+                
+                renderSettings() {
+                    const soundOn = this.state.settings.sound;
+                    this.dom.settingsModal.innerHTML = `
+                    <div class="card p-6 rounded-lg shadow-2xl max-w-md w-full mx-4 anim-fade-in">
+                        <div class="flex justify-between items-center card-header pb-3 mb-4">
+                            <h3 class="text-2xl font-bold">Settings</h3>
+                            <button id="settingsCloseBtn" class="p-2 rounded-full hover:bg-themed">&times;</button>
+                        </div>
+                        <div class="space-y-4">
+                            <div>
+                                <label for="theme-select" class="block text-sm font-medium mb-2">Theme</label>
+                                <select id="theme-select" class="w-full p-2 bg-themed rounded-lg">
+                                    <option value="dark">Dark Nebula</option>
+                                    <option value="light">Arcade Light</option>
+                                    <option value="forest">Forest Grove</option>
+                                </select>
+                            </div>
+                            <div class="flex justify-between items-center bg-themed p-2 rounded-lg">
+                                <label for="sound-toggle" class="text-sm font-medium">Sound Effects</label>
+                                <button id="sound-toggle" class="px-3 py-1 text-sm rounded-md ${soundOn ? 'bg-green-600' : 'bg-gray-600'}">${soundOn ? 'On' : 'Off'}</button>
+                            </div>
+                            <div class="flex gap-2">
+                                <button id="export-data-btn" class="w-full bg-gray-600 hover:bg-gray-700 text-white font-semibold py-2 px-4 rounded-lg transition">Export Data</button>
+                                <button id="reset-data-btn" class="w-full bg-red-800 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-lg transition">Reset Data</button>
+                            </div>
+                        </div>
+                    </div>`;
+                    document.getElementById('theme-select').value = this.state.settings.theme;
+                    document.getElementById('theme-select').addEventListener('change', e => this.handleThemeChange(e));
+                    document.getElementById('export-data-btn').addEventListener('click', () => this.exportDataToCSV());
+                    document.getElementById('reset-data-btn').addEventListener('click', () => this.handleResetData());
+                    document.getElementById('sound-toggle').addEventListener('click', e => this.handleSoundToggle(e));
+                },
+
+                handleSoundToggle(e) {
+                    this.state.settings.sound = !this.state.settings.sound;
+                    const button = e.target;
+                    button.textContent = this.state.settings.sound ? 'On' : 'Off';
+                    button.classList.toggle('bg-green-600', this.state.settings.sound);
+                    button.classList.toggle('bg-gray-600', !this.state.settings.sound);
+                    this.saveStateDebounced();
+                },
+
+                renderManageDailies() {
+                    const content = this.state.customDailies.map(q => `
+                        <div class="bg-themed p-2 rounded-lg flex justify-between items-center">
+                            <p>${q.name}</p>
+                            <button data-id="${q.id}" class="text-red-400 p-1 rounded-full">&times;</button>
+                        </div>`
+                    ).join('') || `<p class="text-center text-gray-400">No custom dailies yet.</p>`;
+                    
+                    this.dom.manageDailiesModal.innerHTML = `
+                    <div class="card p-6 rounded-lg shadow-2xl max-w-lg w-full mx-4 anim-fade-in flex flex-col">
+                        <div class="flex justify-between items-center card-header pb-3 mb-4">
+                            <h3 class="text-2xl font-bold">Manage Daily Quests</h3>
+                            <button id="dailiesCloseBtn" class="p-2 rounded-full hover:bg-themed">&times;</button>
+                        </div>
+                        <div class="space-y-2 mb-4 scrollable-content pr-2 max-h-60 overflow-y-auto">${content}</div>
+                        <h4 class="text-lg font-semibold mt-auto mb-2">Add New Daily</h4>
+                        <form id="add-daily-form" class="flex gap-2">
+                            <input type="text" id="daily-name" placeholder="Name" class="p-2 bg-themed rounded-lg flex-grow" required>
+                            <input type="text" id="daily-category" placeholder="Category" class="p-2 bg-themed rounded-lg w-32" required>
+                            <input type="number" id="daily-xp" placeholder="XP" class="p-2 bg-themed rounded-lg w-20" required>
+                            <button type="submit" class="bg-blue-600 hover:bg-blue-700 p-2 rounded-lg">+</button>
+                        </form>
+                    </div>`;
+
+                    this.dom.manageDailiesModal.addEventListener('click', e => {
+                        if (e.target.closest('button[data-id]')) {
+                            this.handleDeleteCustomDaily(Number(e.target.closest('button[data-id]').dataset.id));
+                        }
+                    });
+                },
+
+                renderAvatarModal() {
+                    const availableAvatars = {...this.config.avatars};
+                    if (!this.state.unlockedJourneyChapters['hj3']) {
+                        delete availableAvatars.gold_dragon;
+                    }
+
+                    const content = Object.keys(availableAvatars).map(key => {
+                        const classBonus = this.config.classBonuses[key] || { description: 'A legendary hero.'};
+                        return `
+                        <div class="text-center">
+                            <button data-avatar="${key}" class="avatar-select-button p-2 bg-themed rounded-lg border-2 border-transparent ${this.state.character.avatar === key ? 'selected' : ''}">
+                                <img src="${this.config.avatars[key]}" class="w-16 h-16" style="image-rendering: pixelated;">
+                            </button>
+                            <p class="text-sm font-bold capitalize mt-2">${key.replace('_', ' ')}</p>
+                            <p class="text-xs text-gray-400 mt-1">${classBonus.description}</p>
+                        </div>`
+                    }).join('');
+                    
+                    this.dom.avatarModal.innerHTML = `
+                    <div class="card p-6 rounded-lg shadow-2xl max-w-lg w-full mx-4 anim-fade-in">
+                        <div class="flex justify-between items-center card-header pb-3 mb-4">
+                            <h3 class="text-2xl font-bold">Choose Class</h3>
+                            <button id="avatarCloseBtn" class="p-2 rounded-full hover:bg-themed">&times;</button>
+                        </div>
+                        <div class="grid grid-cols-3 gap-4">${content}</div>
+                    </div>`;
+                },
+
+                renderWeeklyQuest() {
+                    this.dom.weeklyQuestCard.style.borderColor = 'var(--accent-primary)';
+                    if (!this.state.weeklyQuest) {
+                        this.dom.weeklyQuestCard.innerHTML = `<p class="text-center text-gray-400">Loading weekly quest...</p>`;
+                        return;
+                    }
+                    const questState = this.state.weeklyQuest;
+                    const questConfig = this.config.weeklyQuestPool.find(q => q.id === questState.id);
+                    if (!questConfig) return;
+
+                    let progress = 0, progressText = '';
+                    if (questConfig.id === 'wq1') {
+                        progress = (this.state.player.stats.questsCompletedThisWeek / questConfig.target) * 100;
+                        progressText = `${this.state.player.stats.questsCompletedThisWeek} / ${questConfig.target}`;
+                    } else if (questConfig.id === 'wq2') {
+                        progress = (this.state.player.stats.goldEarnedThisWeek / questConfig.target) * 100;
+                        progressText = `${this.state.player.stats.goldEarnedThisWeek} / ${questConfig.target}`;
+                    }
+
+                    const content = `
+                    <h2 class="text-xl font-bold mb-2 text-accent-primary card-header pb-2">Weekly Epic Quest</h2>
+                    <div>
+                        ${questState.completed ? `
+                        <div class="text-center py-4">
+                            <p class="text-2xl font-bold text-green-400">EPIC QUEST COMPLETE!</p>
+                            <p class="text-gray-300">${questConfig.name}</p>
+                        </div>` : `
+                        <p class="font-semibold text-lg">${questConfig.name}</p>
+                        <div class="my-3">
+                            <div class="flex justify-between text-sm mb-1"><span>Progress</span><span>${progressText}</span></div>
+                            <div class="w-full progress-bar-bg rounded-full h-3"><div class="bg-accent-primary h-3 rounded-full" style="width: ${Math.min(progress, 100)}%"></div></div>
+                        </div>
+                        <p class="text-sm">Reward: <span class="text-accent-primary font-semibold">${questConfig.xp} XP</span> &bull; <span class="gold-text font-semibold">${this.config.goldForTask(questConfig.xp)} G</span></p>
+                        <p id="weekly-timer" class="text-xs text-gray-400 mt-2 text-center"></p>`}
+                    </div>`;
+                    this.dom.weeklyQuestCard.innerHTML = content;
+                    this.startWeeklyTimer();
+                },
+                
+                handleNameChange(e) { this.state.character.name = e.target.value; this.saveStateDebounced(); },
+                
+                handleAddCustomDaily(e) {
+                    e.preventDefault();
+                    const form = e.target;
+                    const name = form.querySelector('#daily-name').value.trim();
+                    const category = form.querySelector('#daily-category').value.trim();
+                    const xp = Number(form.querySelector('#daily-xp').value);
+                    if (name && category && xp > 0) {
+                        this.state.customDailies.push({ id: Date.now(), name, category, xp });
+                        this.renderManageDailies();
+                        this.saveStateDebounced();
+                        form.reset();
+                    }
+                },
+                
+                handleDeleteCustomDaily(id) {
+                    this.state.customDailies = this.state.customDailies.filter(d => d.id !== id);
+                    this.renderManageDailies();
+                    this.saveStateDebounced();
+                },
+                
+                handleAddReward(e) {
+                    e.preventDefault();
+                    const form = this.dom.addRewardForm;
+                    const name = form.querySelector('#reward-name').value.trim();
+                    const cost = parseInt(form.querySelector('#reward-cost').value);
+                    if (name && cost > 0) {
+                        const newReward = { id: Date.now(), name, cost };
+                        this.state.shop.push(newReward);
+                        this.render();
+                        this.audio.playCoin();
+                        form.reset();
+                    }
+                },
+                
+                buyReward(rewardId) {
+                    const reward = this.state.shop.find(r => r.id === rewardId);
+                    if (reward && this.state.player.gold >= reward.cost) {
+                        this.state.player.gold -= reward.cost;
+                        this.state.player.stats.totalGoldSpent += reward.cost;
+                        this.state.player.stats.rewardsClaimed++;
+                        this.showToast(`Purchased "${reward.name}"!`, '', 'success');
+                        this.audio.playCoin();
+                        this.render();
+                    } else {
+                        this.showToast('Not enough gold!', '', 'error');
+                    }
+                },
+                
+                buyMerchantItem(itemId) {
+                    const item = this.config.travelingMerchantItems.find(i => i.id === itemId);
+                    if (!item) return;
+
+                    if (this.state.player.gold < item.cost) {
+                        this.showToast("Not enough gold!", '', 'error');
+                        return;
+                    }
+                    
+                    if (item.duration === Infinity && this.state.player.activeBuffs.some(b => b.id === itemId)) {
+                         this.showToast("You already own this permanent item.", '', 'error');
+                         return;
+                    }
+
+                    this.state.player.gold -= item.cost;
+                    
+                    const expiresAt = item.duration === Infinity ? null : Date.now() + item.duration * 60 * 60 * 1000;
+                    this.state.player.activeBuffs.push({ id: item.id, expiresAt });
+                    
+                    this.showToast(`Purchased ${item.name}!`, item.desc, 'success');
+                    this.audio.playCoin();
+                    this.render();
+                },
+
+                checkActiveBuffs() {
+                    const now = Date.now();
+                    this.state.player.activeBuffs = this.state.player.activeBuffs.filter(buff => {
+                        return buff.expiresAt === null || buff.expiresAt > now;
+                    });
+                },
+
+                animateRewardGain(element, text, type) {
+                    if (!element) return;
+                    const rect = element.getBoundingClientRect();
+                    const flyUp = document.createElement('div');
+                    flyUp.textContent = text;
+                    flyUp.className = 'reward-fly-up';
+                    if (type === 'xp') {
+                        flyUp.style.backgroundColor = 'var(--accent-primary)';
+                        flyUp.style.color = 'var(--text-primary)';
+                    } else { // gold
+                        flyUp.style.backgroundColor = 'var(--accent-gold)';
+                        flyUp.style.color = '#1F2937'; // Dark text for gold bg
+                    }
+                    flyUp.style.left = `${rect.left + rect.width / 2 - 20}px`;
+                    flyUp.style.top = `${rect.top + rect.height / 2 - 10}px`;
+                    document.body.appendChild(flyUp);
+                    flyUp.addEventListener('animationend', () => flyUp.remove());
+                },
+                
+                renderFilterOptions() {
+                    const categories = [...new Set(this.state.tasks.map(t => t.category))];
+                    const currentFilter = this.state.uiSettings.filterCategory;
+                    
+                    this.dom.filterCategory.innerHTML = `
+                        <option value="all">All Categories</option>
+                        ${categories.map(cat => `<option value="${cat}" ${cat === currentFilter ? 'selected' : ''}>${cat}</option>`).join('')}
+                    `;
+                    this.dom.sortTasks.value = this.state.uiSettings.sortBy;
+                },
+
+                isQuestActiveToday(task) {
+                    if (!task.recurrence || task.recurrence.type === 'none') {
+                        return true; // One-time tasks are always active until completed
+                    }
+                    const todayStr = new Date().toISOString().split('T')[0];
+                    if (task.lastCompleted === todayStr) {
+                        return false; // Already completed today
+                    }
+                    // More complex recurrence logic would go here
+                    return true;
+                },
+
+                renderSkills() {
+                    if (Object.keys(this.state.skills).length === 0) {
+                        this.dom.skillsList.innerHTML = `<div class="empty-state-container text-sm text-gray-400">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>
+                            <h3 class="font-semibold">No Skills Yet</h3><p>Complete quests to discover and level up skills!</p></div>`;
+                        return;
+                    }
+                    const focusSkill = this.state.uiSettings.weeklyFocusSkill;
+                    this.dom.skillsList.innerHTML = Object.entries(this.state.skills).map(([name, skill]) => {
+                        const reqXp = this.config.xpForLevel(skill.level);
+                        const progress = (skill.xp / reqXp) * 100;
+                        const isFocus = name === focusSkill;
+                        return `
+                        <div class="skill-item p-2 rounded-lg border border-transparent transition-colors ${isFocus ? 'is-focus' : ''}">
+                            <div class="flex justify-between items-baseline mb-1">
+                                <div class="flex items-center gap-2">
+                                    <button data-action="set-focus" data-skill="${name}" class="skill-focus-button text-gray-600 hover:text-yellow-400 transition-colors ${isFocus ? 'active' : ''}">
+                                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
+                                    </button>
+                                    <span class="font-semibold">${name}</span>
+                                </div>
+                                <span class="text-sm font-bold">Lvl ${skill.level}</span>
+                            </div>
+                            <div class="progress-bar-bg w-full h-3 rounded-full overflow-hidden">
+                                <div class="progress-bar-fill skill-bar h-full" style="width: ${progress}%;"></div>
+                            </div>
+                        </div>`;
+                    }).join('');
+                    this.dom.skillSuggestions.innerHTML = Object.keys(this.state.skills).map(skill => `<option value="${skill}"></option>`).join('');
+                },
+                renderHeroJourney() {
+                    this.dom.heroJourneyList.innerHTML = this.config.heroJourney.map(chapter => {
+                        const isUnlocked = !!this.state.unlockedJourneyChapters[chapter.id];
+                        return `
+                        <div class="flex items-start gap-4 achievement ${isUnlocked ? 'unlocked' : 'locked'}">
+                            <div class="achievement-icon pt-1">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10.868 2.884c.321-.772 1.415-.772 1.736 0l1.291 3.118c.16.386.524.654.945.698l3.437.5c1.033.15 1.448 1.433.704 2.162l-2.487 2.424c-.294.286-.426.703-.359 1.118l.586 3.422c.177 1.031-1.012 1.815-1.922 1.321l-3.072-1.615a1.25 1.25 0 00-1.164 0L6.34 16.24c-.91.494-2.098-.29-1.922-1.321l.586-3.422c.067-.415-.065-.832-.359-1.118l-2.487-2.424c-.744-.729-.329-2.012.704-2.162l3.437-.5c.421-.044.785-.312.945-.698l1.291-3.118z" clip-rule="evenodd" /></svg>
+                            </div>
+                            <div class="achievement-text flex-1">
+                                <p class="font-semibold">${chapter.name}</p>
+                                <p class="text-sm">${chapter.desc}</p>
+                                ${isUnlocked ? `<p class="text-xs text-green-400 font-bold">Reward: ${chapter.rewardDesc}</p>` : ''}
+                            </div>
+                        </div>`;
+                    }).join('');
+                },
+
+                 renderShop() {
+                    this.renderMerchantDeals();
+                    if (this.state.shop.length === 0) {
+                        this.dom.shopList.innerHTML = `<div class="empty-state-container text-sm text-gray-400">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1"><path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" /></svg>
+                            <h3 class="font-semibold">Shop is Empty</h3><p>Add your own rewards to the shop below.</p></div>`;
+                        return;
+                    }
+                    this.dom.shopList.innerHTML = this.state.shop.map(item => `
+                        <div data-reward-id="${item.id}" class="bg-themed p-2 rounded-lg flex justify-between items-center anim-fade-in">
+                            <div><p>${item.name}</p><p class="text-sm gold-text font-semibold">${item.cost} G</p></div>
+                            <div class="flex items-center gap-1">
+                                <button data-id="${item.id}" data-action="edit-reward" class="p-2 rounded-full hover:bg-blue-500/20"><svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L15.232 5.232z"></path></svg></button>
+                                <button data-id="${item.id}" data-action="delete-reward" class="p-2 rounded-full hover:bg-red-500/20"><svg class="w-4 h-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
+                                <button data-id="${item.id}" data-action="buy-reward" class="bg-yellow-500 hover:bg-yellow-600 text-gray-900 font-bold p-2 rounded-lg" ${this.state.player.gold < item.cost ? 'disabled' : ''}><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M3 1a1 1 0 000 2h1.22l.305 1.222a.997.997 0 00.01.042l1.358 5.43-.893.892C3.74 11.846 4.632 14 6.414 14H15a1 1 0 000-2H6.414l1-1H14a1 1 0 00.894-.553l3-6A1 1 0 0017 3H6.28l-.31-1.243A1 1 0 005 1H3zM16 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM6.5 18a1.5 1.5 0 100-3 1.5 1.5 0 000 3z"></path></svg></button>
+                            </div>
+                        </div>`).join('');
+                },
+
+                renderMerchantDeals() {
+                    const dailyItem = this.config.travelingMerchantItems.find(i => i.id === this.state.merchant.dailyDealId);
+                    const weeklyItem = this.config.travelingMerchantItems.find(i => i.id === this.state.merchant.weeklyDealId);
+                    
+                    let html = `<h3 class="text-lg font-semibold mb-2">Traveling Merchant</h3>`;
+                    
+                    if (dailyItem) {
+                        html += this.renderMerchantItem(dailyItem, 'Daily Deal');
+                    }
+                    if (weeklyItem) {
+                        html += this.renderMerchantItem(weeklyItem, 'Weekly Deal');
+                    }
+                    
+                    this.dom.travelingMerchantSection.innerHTML = html;
+                },
+                
+                renderMerchantItem(item, dealType) {
+                    const hasBuff = this.state.player.activeBuffs.some(b => b.id === item.id);
+                    const canAfford = this.state.player.gold >= item.cost;
+                    const isDisabled = hasBuff || !canAfford;
+                    
+                    return `<div class="bg-themed p-3 rounded-lg mb-2 border-l-4 border-purple-500">
+                        <p class="text-sm font-bold text-purple-400">${dealType}</p>
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <p class="font-semibold">${item.icon} ${item.name}</p>
+                                <p class="text-xs text-text-secondary">${item.desc}</p>
+                                <p class="text-sm gold-text font-semibold">${item.cost} G</p>
+                            </div>
+                            <button data-action="buy-merchant-item" data-id="${item.id}" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-3 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed" ${isDisabled ? 'disabled' : ''}>
+                                ${hasBuff ? 'Owned' : 'Buy'}
+                            </button>
+                        </div>
+                    </div>`;
+                },
+
+                renderActiveBuffs() {
+                    this.checkActiveBuffs();
+                    this.dom.activeBuffsContainer.innerHTML = this.state.player.activeBuffs.map(buff => {
+                        const item = this.config.travelingMerchantItems.find(i => i.id === buff.id);
+                        if (!item) return '';
+
+                        const expiresIn = buff.expiresAt ? `Expires: ${new Date(buff.expiresAt).toLocaleTimeString()}` : 'Permanent';
+
+                        return `<div class="tooltip text-xl">
+                            ${item.icon}
+                            <span class="tooltiptext">${item.name}<br>${expiresIn}</span>
+                        </div>`;
+                    }).join('');
+                },
+
+                renderPlayerProfile() {
+                    const { questsCompleted, totalGoldEarned, totalXpGained, totalGoldSpent, rewardsClaimed } = this.state.player.stats;
+                    this.dom.playerProfileStats.innerHTML = `
+                        <div class="grid grid-cols-1 gap-1">
+                           ${this.createStatItem('quests', 'Quests Completed', questsCompleted)}
+                           ${this.createStatItem('xp', 'Total XP Gained', `${Math.round(totalXpGained)} XP`)}
+                           ${this.createStatItem('gold', 'Total Gold Earned', `<span class="gold-text">${Math.round(totalGoldEarned)} G</span>`)}
+                           ${this.createStatItem('spent', 'Total Gold Spent', `<span class="gold-text">${totalGoldSpent || 0} G</span>`)}
+                           ${this.createStatItem('chest', 'Rewards Claimed', rewardsClaimed || 0)}
+                        </div>`;
+                },
+
+                createStatItem(iconType, tooltipText, value) {
+                    const icons = {
+                        quests: `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A1 1 0 0111.293 2.707l1.414 1.414a1 1 0 01.293.707V6h2a2 2 0 012 2v6a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd" /></svg>`,
+                        xp: `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-accent-primary" viewBox="0 0 20 20" fill="currentColor"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>`,
+                        gold: `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 gold-text" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM6.878 7.878A1 1 0 018.293 7.293L10 9.586l1.707-2.293a1 1 0 111.415 1.414l-2.414 3.243a1 1 0 01-1.414 0L6.878 9.293a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>`,
+                        spent: `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor"><path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z" /><path fill-rule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm3 0a1 1 0 011-1h1a1 1 0 110 2H8a1 1 0 01-1-1z" clip-rule="evenodd" /></svg>`,
+                        chest: `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor"><path d="M5 8a2 2 0 012-2h6a2 2 0 012 2v1H5V8z" /><path fill-rule="evenodd" d="M3 10a2 2 0 012-2h10a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5zm3 2a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1z" clip-rule="evenodd" /></svg>`,
+                    };
+                    return `
+                        <div class="flex items-center gap-3 p-2 rounded-md hover:bg-white/5 transition-colors">
+                            <div class="tooltip">
+                                ${icons[iconType]}
+                                <span class="tooltiptext">${tooltipText}</span>
+                            </div>
+                            <span class="font-bold text-right flex-grow">${value}</span>
+                        </div>`;
+                },
+                
+                renderAchievements() {
+                    this.dom.achievementsList.innerHTML = this.config.achievements.map(ach => {
+                        const unlockedDate = this.state.unlockedAchievements[ach.id];
+                        const isUnlocked = !!unlockedDate;
+                        return `
+                        <div class="flex items-start gap-4 achievement ${isUnlocked ? 'unlocked' : 'locked'}">
+                            <div class="achievement-icon pt-1">
+                                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M11.25 2.269a.75.75 0 00-1.5 0l-1.33 4.1a.75.75 0 01-.704.518H3.32a.75.75 0 00-.583 1.233l3.29 2.795a.75.75 0 01-.27 1.35l-1.33 4.1a.75.75 0 001.07 1.07l3.29-2.795a.75.75 0 01.972 0l3.29 2.795a.75.75 0 001.07-1.07l-1.33-4.1a.75.75 0 01-.27-1.35l3.29-2.795a.75.75 0 00-.583-1.233H12.28a.75.75 0 01-.704-.518l-1.33-4.1z" clip-rule="evenodd"></path></svg>
+                            </div>
+                            <div class="achievement-text">
+                                <p class="font-semibold">${ach.name}</p>
+                                <p class="text-sm">${ach.desc}</p>
+                                ${isUnlocked ? `<p class="text-xs gold-text">Unlocked: ${unlockedDate}</p>` : ''}
+                            </div>
+                        </div>`;
+                    }).join('') || `<div class="empty-state-container text-sm text-gray-400">...</div>`;
+                },
+                
+                handleThemeChange(e) { this.state.settings.theme = e.target.value; this.applyTheme(); this.saveStateDebounced(); },
+                
+                applyTheme() { 
+                    document.documentElement.setAttribute('data-theme', this.state.settings.theme); 
+                    this.renderStatsChart(); 
+                    this.renderCategoryDonutChart();
+                    this.renderSkillRadarChart();
+                    this.renderTimeOfDayChart();
+                },
+                
+                handleResetData() {
+                    this.showModal('confirmationModal', 'Reset All Data?', 'This will permanently delete all progress. This action cannot be undone.', async () => {
+                        this.state = this.getDefaultState();
+                        this.generateDailyQuests();
+                        this.generateWeeklyQuest();
+                        await this.saveStateToFirestore(); // Save the reset state
+                        this.hideModal('confirmationModal');
+                        this.showToast('All data has been reset.', '', 'success');
+                        this.render(); // Re-render everything with the fresh state
+                    });
+                },
+
+                exportDataToCSV() {
+                    let csvContent = "data:text/csv;charset=utf-8,";
+                    csvContent += "Category,Name,Value\n";
+                    // Player Stats
+                    Object.entries(this.state.player.stats).forEach(([key, value]) => {
+                        csvContent += `Player Stat,"${key}",${value}\n`;
+                    });
+                    // Active Quests
+                    this.state.tasks.forEach(task => {
+                        csvContent += `Active Quest,"${task.name.replace(/"/g, '""')}","${task.category}, ${task.xp} XP"\n`;
+                    });
+                    const encodedUri = encodeURI(csvContent);
+                    const link = document.createElement("a");
+                    link.setAttribute("href", encodedUri);
+                    link.setAttribute("download", "task-quest-data.csv");
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                },
+
+                deleteTask(taskId) {
+                    this.state.tasks = this.state.tasks.filter(t => t.id !== taskId);
+                    this.render();
+                    this.hideModal('confirmationModal');
+                },
+
+                deleteReward(rewardId) {
+                    this.state.shop = this.state.shop.filter(r => r.id !== rewardId);
+                    this.render();
+                    this.hideModal('confirmationModal');
+                },
+
+                showModal(modalId, ...args) {
+                    const modal = document.getElementById(modalId);
+                    switch (modalId) {
+                        case 'settingsModal': this.renderSettings(); break;
+                        case 'manageDailiesModal': this.renderManageDailies(); break;
+                        case 'avatarModal': this.renderAvatarModal(); break;
+                        case 'questLogModal': this.renderQuestLog(); break;
+                        case 'confirmationModal': {
+                            const [title, message, onConfirm] = args;
+                            modal.innerHTML = `<div class="card p-6 rounded-lg shadow-2xl max-w-sm w-full mx-4 anim-fade-in"><h3 class="text-xl font-bold mb-4">${title || 'Confirm'}</h3><p class="text-secondary mb-6">${message || 'Are you sure?'}</p><div class="flex justify-end gap-4"><button id="modalCancelBtn" class="bg-gray-600 hover:bg-gray-700 font-semibold py-2 px-4 rounded-lg">Cancel</button><button id="modalConfirmBtn" class="bg-red-600 hover:bg-red-700 font-semibold py-2 px-4 rounded-lg">Confirm</button></div></div>`;
+                            modal.querySelector('#modalConfirmBtn').onclick = () => onConfirm();
+                            break;
+                        }
+                    }
+                    modal.classList.add('flex');
+                    setTimeout(() => modal.classList.add('opacity-100'), 10);
+                },
+
+                hideModal(modalId) {
+                    let modal = document.getElementById(modalId);
+                    modal.classList.remove('opacity-100');
+                    modal.addEventListener('transitionend', () => modal.classList.remove('flex'), { once: true });
+                },
+
+                showEditModal(type, id) {
+                    this.state.editing = { type, id };
+                    let item, formHtml;
+                    const commonClasses = "w-full p-2 bg-themed rounded-lg";
+                    if (type === 'task') {
+                        item = this.state.tasks.find(t => t.id === id);
+                        formHtml = `<div><label for="edit-name" class="block text-sm mb-1">Quest Name</label><input type="text" id="edit-name" value="${item.name}" required class="${commonClasses}"></div><div><label for="edit-category" class="block text-sm mb-1">Category</label><input type="text" id="edit-category" value="${item.category}" list="skill-suggestions" required class="${commonClasses}"></div><div><label for="edit-xp" class="block text-sm mb-1">XP Reward</label><input type="number" id="edit-xp" value="${item.xp}" min="10" step="10" required class="${commonClasses}"></div>`;
+                    } else { // reward
+                        item = this.state.shop.find(r => r.id === id);
+                        formHtml = `<div><label for="edit-name" class="block text-sm mb-1">Reward Name</label><input type="text" id="edit-name" value="${item.name}" required class="${commonClasses}"></div><div><label for="edit-cost" class="block text-sm mb-1">Gold Cost</label><input type="number" id="edit-cost" value="${item.cost}" min="1" required class="${commonClasses}"></div>`;
+                    }
+                    formHtml += `<div class="flex justify-end gap-4 mt-6"><button type="button" id="editCancelBtn" class="bg-gray-600 hover:bg-gray-700 font-semibold py-2 px-4 rounded-lg">Cancel</button><button type="submit" class="bg-blue-600 hover:bg-blue-700 font-semibold py-2 px-4 rounded-lg">Save</button></div>`;
+                    
+                    const modal = document.getElementById('editModal');
+                    modal.innerHTML = `<div class="card p-6 rounded-lg shadow-2xl max-w-md w-full mx-4 anim-fade-in"><h3 class="text-2xl font-bold mb-4">Edit Item</h3><form id="edit-form" class="space-y-4">${formHtml}</form></div>`;
+                    this.showModal('editModal');
+                },
+
+                showToast(title, message = "", type = "default") {
+                    const toast = document.createElement("div");
+                    toast.className = `toast p-4 rounded-lg shadow-xl transform translate-y-4 opacity-0 transition-all duration-300 toast-${type}`;
+                    toast.innerHTML = `<p class="font-semibold">${title}</p>${message ? `<p class="text-sm mt-1">${message}</p>` : ""}`;
+                    this.dom.toastContainer.appendChild(toast);
+                    setTimeout(() => { toast.classList.remove("translate-y-4", "opacity-0"); }, 10);
+                    setTimeout(() => {
+                        toast.classList.add("translate-y-4", "opacity-0");
+                        toast.addEventListener("transitionend", () => toast.remove(), { once: true });
+                    }, 4000);
+                },
+
+                ensureSkillExists(category) {
+                    if (!this.state.skills[category]) {
+                        this.state.skills[category] = { level: 1, xp: 0 };
+                    }
+                },
+                
+                toggleAdvancedOptions() {
+                    const container = this.dom.advancedOptionsContainer;
+                    const isOpen = container.classList.toggle('open');
+                    this.dom.toggleAdvancedBtn.textContent = isOpen ? 'Hide Advanced Options' : 'Show Advanced Options';
+                },
+
+                handleFilterChange(e) { this.state.uiSettings.filterCategory = e.target.value; this.renderTasks(); },
+                handleSortChange(e) { this.state.uiSettings.sortBy = e.target.value; this.renderTasks(); },
+
+                switchMobileTab(tabName) {
+                    this.state.uiSettings.activeMobileTab = tabName;
+                    Object.values(this.dom.mobilePanels).forEach(panel => panel.classList.add('hidden'));
+                    this.dom.mobilePanels[tabName].classList.remove('hidden');
+                    this.dom.mobileTabBar.querySelectorAll('.mobile-tab').forEach(button => {
+                        button.classList.toggle('active', button.dataset.tab === tabName);
+                    });
+                },
+
+                switchProfileTab(tabName) {
+                    Object.values(this.dom.profileTabContents).forEach(content => content.style.display = 'none');
+                    this.dom.profileTabs.forEach(tab => tab.classList.remove('active'));
+
+                    if (this.dom.profileTabContents[tabName]) {
+                        this.dom.profileTabContents[tabName].style.display = 'block';
+                    }
+                    const activeTab = document.querySelector(`.profile-tab[data-tab="${tabName}"]`);
+                    if(activeTab) activeTab.classList.add('active');
+                },
+
+                renderStatsChart() {
+                    if (this.statsChart) this.statsChart.destroy();
+                    const labels = [];
+                    const data = [];
+                    for (let i = 6; i >= 0; i--) {
+                        const date = new Date();
+                        date.setDate(date.getDate() - i);
+                        labels.push(date.toLocaleDateString(undefined, { weekday: "short" }));
+                        const count = this.state.completedTasks.filter(t => new Date(t.completedAt).toDateString() === date.toDateString()).length;
+                        data.push(count);
+                    }
+                    const isLight = this.state.settings.theme === 'light';
+                    const gridColor = isLight ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.1)';
+                    const textColor = isLight ? '#4B5563' : '#9CA3AF';
+                    this.statsChart = new Chart(this.dom.statsChartCanvas, {
+                        type: 'bar',
+                        data: { labels, datasets: [{ label: "Quests Completed", data, backgroundColor: "rgba(59, 130, 246, 0.5)", borderColor: "rgba(59, 130, 246, 1)", borderWidth: 1 }] },
+                        options: { scales: { y: { beginAtZero: true, grid: { color: gridColor }, ticks: { color: textColor, stepSize: 1 } }, x: { grid: { color: gridColor }, ticks: { color: textColor } } }, plugins: { legend: { display: false } }, maintainAspectRatio: false }
+                    });
+                },
+
+                renderCategoryDonutChart() {
+                    if (this.categoryChart) this.categoryChart.destroy();
+                    const categoryCounts = this.state.completedTasks.reduce((acc, task) => {
+                        acc[task.category] = (acc[task.category] || 0) + 1;
+                        return acc;
+                    }, {});
+                    const labels = Object.keys(categoryCounts);
+                    const data = Object.values(categoryCounts);
+                    if (labels.length === 0) return;
+                    
+                    const isLight = this.state.settings.theme === 'light';
+                    const textColor = isLight ? '#4B5563' : '#9CA3AF';
+                    const backgroundColors = ['#3B82F6', '#8B5CF6', '#10B981', '#F97316', '#EF4444', '#EAB308', '#6366F1'];
+
+                    this.categoryChart = new Chart(this.dom.categoryDonutChartCanvas, {
+                        type: 'doughnut',
+                        data: {
+                            labels,
+                            datasets: [{
+                                label: 'Quests by Category',
+                                data,
+                                backgroundColor: backgroundColors,
+                                borderColor: 'var(--bg-primary)',
+                                borderWidth: 2,
+                            }]
+                        },
+                        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { color: textColor, boxWidth: 12, padding: 15 } } } }
+                    });
+                },
+
+                renderSkillRadarChart() {
+                    if (this.skillRadarChart) this.skillRadarChart.destroy();
+                    const skillXp = this.state.completedTasks.reduce((acc, task) => {
+                        acc[task.category] = (acc[task.category] || 0) + task.finalXp;
+                        return acc;
+                    }, {});
+                    const labels = Object.keys(skillXp);
+                    if (labels.length < 3) return; // Radar charts need at least 3 points
+                    const data = Object.values(skillXp);
+
+                    const isLight = this.state.settings.theme === 'light';
+                    const gridColor = isLight ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.1)';
+                    const textColor = isLight ? '#4B5563' : '#9CA3AF';
+
+                    this.skillRadarChart = new Chart(this.dom.skillRadarChartCanvas, {
+                        type: 'radar',
+                        data: {
+                            labels,
+                            datasets: [{
+                                label: 'Total XP Earned',
+                                data,
+                                backgroundColor: 'rgba(139, 92, 246, 0.2)',
+                                borderColor: 'rgba(139, 92, 246, 1)',
+                                borderWidth: 2
+                            }]
+                        },
+                        options: {
+                            responsive: true, maintainAspectRatio: false,
+                            scales: { r: { angleLines: { color: gridColor }, grid: { color: gridColor }, pointLabels: { color: textColor }, ticks: { display: false } } },
+                            plugins: { legend: { display: false } }
+                        }
+                    });
+                },
+
+                renderTimeOfDayChart() {
+                    if (this.timeOfDayChart) this.timeOfDayChart.destroy();
+                    const hourlyCounts = Array(24).fill(0);
+                    this.state.completedTasks.forEach(task => {
+                        const hour = new Date(task.completedAt).getHours();
+                        hourlyCounts[hour]++;
+                    });
+
+                    const isLight = this.state.settings.theme === 'light';
+                    const gridColor = isLight ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.1)';
+                    const textColor = isLight ? '#4B5563' : '#9CA3AF';
+                    const labels = Array.from({ length: 24 }, (_, i) => `${i % 12 === 0 ? 12 : i % 12}${i < 12 ? 'a' : 'p'}`);
+
+                    this.timeOfDayChart = new Chart(this.dom.timeOfDayChartCanvas, {
+                        type: 'bar',
+                        data: {
+                            labels,
+                            datasets: [{
+                                label: 'Quests Completed',
+                                data: hourlyCounts,
+                                backgroundColor: 'rgba(249, 115, 22, 0.5)',
+                                borderColor: 'rgba(249, 115, 22, 1)',
+                                borderWidth: 1
+                            }]
+                        },
+                        options: {
+                            responsive: true, maintainAspectRatio: false,
+                             scales: { y: { beginAtZero: true, grid: { color: gridColor }, ticks: { color: textColor, stepSize: 1 } }, x: { grid: { color: gridColor }, ticks: { color: textColor, autoSkip: true, maxTicksLimit: 12 } } }, 
+                             plugins: { legend: { display: false } }
+                        }
+                    });
+                },
+
+                renderProductivityHeatmap() {
+                    const container = this.dom.productivityHeatmapContainer;
+                    container.innerHTML = '';
+                    const completionMap = new Map();
+                    this.state.completedTasks.forEach(task => {
+                        const dateStr = new Date(task.completedAt).toISOString().split('T')[0];
+                        completionMap.set(dateStr, (completionMap.get(dateStr) || 0) + 1);
+                    });
+
+                    const endDate = new Date();
+                    const startDate = new Date();
+                    startDate.setDate(endDate.getDate() - 34); // Approx 5 weeks
+
+                    for (let i = 0; i < 35; i++) {
+                        const day = new Date(startDate);
+                        day.setDate(startDate.getDate() + i);
+                        const dateStr = day.toISOString().split('T')[0];
+                        const count = completionMap.get(dateStr) || 0;
+                        
+                        const cell = document.createElement('div');
+                        cell.className = 'w-5 h-5 rounded-sm tooltip';
+                        
+                        let colorClass = 'bg-gray-700'; // Default for no completions
+                        if (count > 0 && count <= 2) colorClass = 'bg-blue-800';
+                        else if (count > 2 && count <= 4) colorClass = 'bg-blue-600';
+                        else if (count > 4) colorClass = 'bg-blue-400';
+                        cell.classList.add(colorClass);
+
+                        cell.innerHTML = `<span class="tooltiptext">${dateStr}: ${count} quests</span>`;
+                        container.appendChild(cell);
+                    }
+                },
+
+
+                startWeeklyTimer() {
+                    if (this.weeklyTimerInterval) clearInterval(this.weeklyTimerInterval);
+                    const timerEl = document.getElementById("weekly-timer");
+                    if (timerEl) {
+                        this.weeklyTimerInterval = setInterval(() => {
+                            const now = new Date();
+                            const endOfWeek = new Date();
+                            endOfWeek.setDate(now.getDate() + (7 - now.getDay()));
+                            endOfWeek.setHours(23, 59, 59, 999);
+                            const diff = endOfWeek - now;
+                            const d = Math.floor(diff / (1000 * 60 * 60 * 24));
+                            const h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                            const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                            const s = Math.floor((diff % (1000 * 60)) / 1000);
+                            timerEl.textContent = `Time Remaining: ${d}d ${h}h ${m}m ${s}s`;
+                        }, 1000);
+                    }
+                },
+                
+                renderQuestLog() {
+                    const content = this.state.completedTasks.length === 0 ? '<p class="text-gray-400 text-center">No completed quests yet.</p>' : [...this.state.completedTasks].map(task => {
+                        const hasRewardDetails = task.finalXp !== undefined;
+                        const rewardDetailsHtml = hasRewardDetails ? `
+                            <div class="text-xs space-y-1 mt-2 pt-2 border-t border-white/10">
+                                ${task.rewardsLogHtml || ''}
+                                <p>Base Reward: <span class="font-semibold">${task.xp} XP</span> &bull; <span class="font-semibold gold-text">${this.config.goldForTask(task.xp)} G</span></p>
+                                <p class="font-bold">Total Gained: <span class="text-accent-primary">${Math.round(task.finalXp)} XP</span> &bull; <span class="gold-text">${Math.round(task.goldGained)} G</span></p>
+                            </div>
+                        ` : '';
+
+                        return `
+                        <div class="bg-themed p-3 rounded-md">
+                            <div>
+                                <p class="font-semibold">${task.name} <span class="text-xs text-gray-400">- ${task.category}</span></p>
+                                <p class="text-xs text-gray-500">Completed: ${new Date(task.completedAt).toLocaleString()}</p>
+                            </div>
+                            ${rewardDetailsHtml}
+                        </div>`
+                    }).join("");
+                        
+                    this.dom.questLogModal.innerHTML = `
+                    <div class="card p-6 rounded-lg shadow-2xl max-w-2xl w-full mx-4 anim-fade-in flex flex-col">
+                        <div class="flex justify-between items-center card-header pb-3 mb-4">
+                            <h3 class="text-2xl font-bold">Completed Quest Log</h3>
+                            <button id="questLogCloseBtn" class="p-2 rounded-full hover:bg-themed">&times;</button>
+                        </div>
+                        <div class="space-y-2 overflow-y-auto max-h-[60vh] pr-2 scrollable-content">${content}</div>
+                    </div>`;
+                },
+
+                renderRecurrenceOptions(type) {
+                    const container = this.dom.recurrenceOptions;
+                    if (type === 'weekly') {
+                        container.innerHTML = `<div class="text-sm"><label class="block mb-2">Repeat on:</label><div class="flex justify-around bg-themed p-1 rounded-lg">${['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, i) => `<label class="flex items-center justify-center w-8 h-8 rounded-full cursor-pointer"><input type="checkbox" name="recurrence-weekly-day" value="${i}" class="sr-only peer"><span class="peer-checked:bg-accent-primary peer-checked:text-white rounded-full w-full h-full flex items-center justify-center">${day}</span></label>`).join('')}</div></div>`;
+                    } else if (type === 'monthly') {
+                        container.innerHTML = `<div class="text-sm"><label for="recurrence-monthly-day" class="block mb-2">Repeat on day:</label><input type="number" id="recurrence-monthly-day" min="1" max="31" value="1" class="w-full p-2 bg-themed rounded-lg"></div>`;
+                    } else {
+                        container.innerHTML = '';
+                    }
+                },
+
+                handleAddSubtask() {
+                    const name = this.dom.subtaskNameInput.value.trim();
+                    if (name) {
+                        this.tempSubtasks.push({ text: name, completed: false });
+                        this.renderTempSubtasks();
+                        this.dom.subtaskNameInput.value = '';
+                        this.dom.subtaskNameInput.focus();
+                    }
+                },
+
+                renderTempSubtasks() {
+                    this.dom.subtasksContainer.innerHTML = this.tempSubtasks.map((sub, index) => `<div class="bg-gray-800/50 p-2 rounded-md flex justify-between items-center text-sm"><span>${sub.text}</span><button type="button" data-index="${index}" data-action="delete-temp-subtask" class="text-red-400 hover:text-red-300">&times;</button></div>`).join('');
+                },
+
+                handleDeleteTempSubtask(e) {
+                    if (e.target.dataset.action === 'delete-temp-subtask') {
+                        const index = Number(e.target.dataset.index);
+                        this.tempSubtasks.splice(index, 1);
+                        this.renderTempSubtasks();
+                    }
+                },
+
+                toggleSubtask(taskId, subtaskIndex) {
+                    const task = this.state.tasks.find(t => t.id === taskId);
+                    if (task && task.subtasks[subtaskIndex]) {
+                        task.subtasks[subtaskIndex].completed = !task.subtasks[subtaskIndex].completed;
+                        this.render();
+                    }
+                },
+
+                 handleAvatarSelect(avatar) {
+                    this.state.character.avatar = avatar;
+                    this.state.character.class = this.config.classBonuses[avatar] ? avatar : this.state.character.class;
+                    this.render();
+                    this.hideModal('avatarModal');
+                }
+            };
+
+            TaskQuest.init();
+        });
+    </script>
+</body>
+</html>
+

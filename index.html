@@ -7,6 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -26,6 +27,9 @@
             --priority-low: #22c55e;
             --priority-medium: #eab308;
             --priority-high: #ef4444;
+            --font-body: 'Inter', sans-serif;
+            --aurora-1: var(--accent-primary);
+            --aurora-2: var(--accent-secondary);
         }
 
         [data-theme="light"] {
@@ -34,6 +38,8 @@
             --border-color: rgba(209, 213, 219, 0.7);
             --text-primary: #1F2937;
             --text-secondary: #4B5563;
+            --aurora-1: var(--accent-primary);
+            --aurora-2: var(--accent-secondary);
         }
 
         [data-theme="forest"] {
@@ -44,13 +50,67 @@
             --text-secondary: #9DBFBC;
             --accent-primary: #34D399;
             --accent-secondary: #A7F3D0;
+            --aurora-1: var(--accent-primary);
+            --aurora-2: var(--accent-secondary);
+        }
+        
+        [data-theme="ruby"] {
+            --bg-primary: #2c0b0e;
+            --bg-secondary: rgba(76, 29, 29, 0.7);
+            --border-color: rgba(127, 29, 29, 0.7);
+            --text-primary: #fecaca;
+            --text-secondary: #fca5a5;
+            --accent-primary: #ef4444;
+            --accent-secondary: #f87171;
+            --aurora-1: var(--accent-primary);
+            --aurora-2: #991b1b; /* red-800 */
+        }
+
+        [data-theme="emerald"] {
+            --bg-primary: #062a15;
+            --bg-secondary: rgba(4, 76, 46, 0.7);
+            --border-color: rgba(5, 150, 105, 0.7);
+            --text-primary: #d1fae5;
+            --text-secondary: #a7f3d0;
+            --accent-primary: #10b981;
+            --accent-secondary: #34d399;
+            --aurora-1: var(--accent-primary);
+            --aurora-2: #065f46; /* green-800 */
+        }
+
+        [data-theme="sapphire"] {
+            --bg-primary: #0c1a3e;
+            --bg-secondary: rgba(30, 58, 138, 0.7); /* blue-800 */
+            --border-color: rgba(30, 64, 175, 0.7); /* blue-700 */
+            --text-primary: #dbeafe; /* blue-100 */
+            --text-secondary: #93c5fd; /* blue-300 */
+            --accent-primary: #0ea5e9; /* sky-500 */
+            --accent-secondary: #22d3ee; /* cyan-400 */
+            --aurora-1: var(--accent-primary);
+            --aurora-2: #155e75; /* cyan-800 */
+        }
+
+        [data-theme="amethyst"] {
+            --bg-primary: #1e1b4b; /* indigo-950 */
+            --bg-secondary: rgba(76, 29, 149, 0.7); /* violet-800 */
+            --border-color: rgba(91, 33, 182, 0.7); /* violet-700 */
+            --text-primary: #e0e7ff; /* indigo-100 */
+            --text-secondary: #c7d2fe; /* indigo-200 */
+            --accent-primary: #d946ef; /* fuchsia-500 */
+            --accent-secondary: #ec4899; /* pink-500 */
+            --aurora-1: var(--accent-primary);
+            --aurora-2: #86198f; /* purple-800 */
         }
 
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: var(--font-body);
             background-color: var(--bg-primary);
             color: var(--text-primary);
             transition: background-color 0.3s, color 0.3s;
+        }
+        
+        h1, h2, h3, h4 {
+            font-weight: 700;
         }
         
         .aurora-background {
@@ -58,8 +118,9 @@
         }
         .aurora-background::before {
             content: ''; position: absolute; top: 50%; left: 50%; width: 1200px; height: 1200px;
-            background-image: radial-gradient(circle, var(--accent-primary) 0%, var(--accent-secondary) 50%, transparent 70%);
+            background-image: radial-gradient(circle, var(--aurora-1) 0%, var(--aurora-2) 50%, transparent 70%);
             opacity: 0.3; transform: translate(-50%, -50%); animation: pulse 20s infinite ease-in-out; filter: blur(120px);
+            transition: background-image 0.5s ease-in-out;
         }
         @keyframes pulse {
             0% { transform: translate(-50%, -50%) scale(1); }
@@ -75,7 +136,15 @@
             border-radius: 0.75rem;
             transition: all 0.2s ease-in-out;
         }
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
         .card-header { border-bottom: 1px solid var(--border-color); }
+        
+        .btn-interactive:active {
+            transform: scale(0.95);
+        }
 
         .progress-bar-bg { background-color: rgba(0,0,0,0.2); }
         .progress-bar-fill { transition: width 0.5s ease-in-out; }
@@ -91,7 +160,7 @@
             background-color: var(--bg-secondary);
             border: 1px solid var(--border-color);
             color: var(--text-primary);
-            font-family: 'Inter', sans-serif;
+            font-family: var(--font-body);
         }
         select { -webkit-appearance: none; -moz-appearance: none; appearance: none; background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e"); background-position: right 0.5rem center; background-repeat: no-repeat; background-size: 1.5em 1.5em; padding-right: 2.5rem; }
 
@@ -123,10 +192,6 @@
         .modal { display: none; opacity: 0; transition: opacity 0.3s ease; }
         .modal.flex { display: flex; }
         .modal.opacity-100 { opacity: 1; }
-
-        .achievement.unlocked .achievement-icon { color: var(--accent-gold); filter: drop-shadow(0 0 5px var(--accent-gold)); }
-        .achievement.locked .achievement-icon { color: var(--text-secondary); }
-        .achievement.locked .achievement-text { color: var(--text-secondary); }
 
         .scrollable-content::-webkit-scrollbar { width: 8px; }
         .scrollable-content::-webkit-scrollbar-track { background: transparent; }
@@ -226,18 +291,78 @@
             50% { box-shadow: 0 0 12px 4px rgba(16, 185, 129, 0.5); }
             100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
         }
-        .skill-focus-button.active { color: var(--accent-gold); }
-        .skill-item.is-focus { background-color: rgba(250, 204, 21, 0.1); border-color: var(--accent-gold); }
+        
+        .journey-item {
+            position: relative;
+            padding-left: 40px;
+            padding-bottom: 2rem;
+        }
+        .journey-item:last-child {
+            padding-bottom: 0;
+        }
+        .journey-item:last-child::before {
+            height: 0;
+        }
+        /* The vertical line */
+        .journey-item::before {
+            content: '';
+            position: absolute;
+            left: 11px;
+            top: 5px;
+            width: 2px;
+            height: 100%;
+            background-color: var(--border-color);
+            transition: background-color 0.5s ease;
+        }
+        .journey-icon {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 24px;
+            height: 24px;
+            background-color: var(--bg-primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+        /* Styling based on status */
+        .journey-item.completed .journey-icon {
+            color: var(--accent-gold);
+            border: 2px solid var(--accent-gold);
+        }
+        .journey-item.completed::before {
+            background-color: var(--accent-gold);
+        }
+        .journey-item.next .journey-icon {
+            color: var(--accent-primary);
+            border: 2px solid var(--accent-primary);
+            animation: pulseIcon 2s infinite ease-in-out;
+        }
+        .journey-item.locked .journey-icon {
+            color: var(--text-secondary);
+            border: 2px solid var(--border-color);
+        }
+        .journey-item.locked .journey-content {
+            opacity: 0.6;
+        }
+        @keyframes pulseIcon {
+            0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7); }
+            50% { box-shadow: 0 0 0 8px rgba(59, 130, 246, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
+        }
+
     </style>
 </head>
 <body class="antialiased">
     <div class="aurora-background"></div>
     <div class="container mx-auto p-4 md:p-8 max-w-7xl relative pb-20 lg:pb-8">
         <header class="text-center mb-8 relative">
-            <h1 class="text-5xl md:text-6xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500 mb-2">QuestLog</h1>
+            <h1 class="text-5xl md:text-6xl tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500 mb-2">QuestLog</h1>
             <p class="text-lg text-gray-400">Level up your life, one quest at a time.</p>
             <button id="settings-btn" class="absolute top-0 right-0 p-2 rounded-full hover:bg-themed transition">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066 2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                <i data-lucide="settings" class="w-6 h-6"></i>
             </button>
         </header>
 
@@ -252,8 +377,8 @@
                         </div>
                         <div class="col-span-2">
                             <input type="text" id="character-name" class="w-full text-2xl font-bold bg-transparent border-0 border-b-2 border-themed focus:outline-none focus:ring-0 p-1" value="Hero">
+                            <p id="character-title" class="text-xs text-center text-yellow-400 font-semibold h-4"></p>
                             <p id="character-class" class="text-sm text-accent-secondary font-semibold capitalize"></p>
-                            <p id="weekly-focus-text" class="text-xs text-center text-accent-primary font-semibold mt-2 h-4"></p>
                             <div class="mt-2 flex justify-between items-center text-sm font-medium text-gray-300">
                                 <span>Level <span id="player-level" class="font-bold">1</span></span>
                                 <span id="player-xp-text">0 / 100</span>
@@ -261,27 +386,23 @@
                             <div class="w-full progress-bar-bg rounded-full h-4 mt-1 overflow-hidden">
                                 <div id="player-xp-bar" class="progress-bar-fill xp-bar h-4 rounded-full" style="width: 0%"></div>
                             </div>
-                             <div class="mt-2 flex justify-between">
-                                 <div><span class="font-semibold">Gold:</span> <span id="player-gold" class="font-bold gold-text">0 G</span></div>
-                                 <div><span class="font-semibold">Streak:</span> <span id="player-streak" class="font-bold streak-text">🔥 0</span></div>
+                             <div class="mt-2 flex items-center justify-between">
+                                 <div class="flex items-center gap-1"><i data-lucide="coins" class="w-5 h-5 gold-text"></i> <span id="player-gold" class="font-bold gold-text">0 G</span></div>
+                                 <div class="flex items-center gap-1"><i data-lucide="flame" class="w-5 h-5 streak-text"></i> <span id="player-streak" class="font-bold streak-text">0</span></div>
                              </div>
                         </div>
                     </div>
                 </div>
                  <div class="card p-6 min-h-[200px]">
-                    <h2 class="text-2xl font-semibold mb-4 card-header pb-3">The Hero's Journey</h2>
-                    <div id="hero-journey-list" class="space-y-4 scrollable-content pr-2 max-h-72 overflow-y-auto"></div>
+                    <h2 class="text-2xl mb-4 card-header pb-3">The Hero's Journey</h2>
+                    <div id="hero-journey-list" class="scrollable-content pr-2 max-h-72 overflow-y-auto"></div>
                 </div>
                  <div class="card p-6 min-h-[200px]">
-                    <h2 class="text-2xl font-semibold mb-4 card-header pb-3">Skills</h2>
+                    <h2 class="text-2xl mb-4 card-header pb-3">Skills</h2>
                     <div id="skills-list" class="space-y-4 scrollable-content pr-2 max-h-72 overflow-y-auto"></div>
                 </div>
-                 <div class="card p-6 min-h-[200px]">
-                    <h2 class="text-2xl font-semibold mb-4 card-header pb-3">Achievements</h2>
-                    <div id="achievements-list" class="space-y-4 scrollable-content pr-2 max-h-72 overflow-y-auto"></div>
-                </div>
                 <div class="card p-6">
-                    <h2 class="text-2xl font-semibold mb-4 card-header pb-3">Player Profile & Stats</h2>
+                    <h2 class="text-2xl mb-4 card-header pb-3">Player Profile & Stats</h2>
                     <div id="player-profile-stats" class="text-sm mb-4"></div>
                     <!-- Chart Tabs -->
                     <div class="mt-4 border-b border-themed flex">
@@ -312,14 +433,14 @@
                             </div>
                         </div>
                     </div>
-                    <button id="quest-log-btn" class="mt-4 w-full bg-gray-600 hover:bg-gray-700 text-white font-semibold py-2 px-4 rounded-lg transition">View Full Log</button>
+                    <button id="quest-log-btn" class="mt-4 w-full bg-gray-600 hover:bg-gray-700 text-white font-semibold py-2 px-4 rounded-lg transition btn-interactive">View Full Log</button>
                 </div>
             </div>
 
             <!-- Middle Column (Quest Hub) -->
             <div id="mobile-panel-quests" class="space-y-8 lg:col-span-1 block lg:block">
                 <div class="card p-6">
-                    <h2 class="text-2xl font-semibold mb-4 card-header pb-3">Add New Quest</h2>
+                    <h2 class="text-2xl mb-4 card-header pb-3">Add New Quest</h2>
                     <form id="add-task-form" class="space-y-4">
                         <input type="text" id="task-name" required placeholder="What's your next quest?" class="w-full p-3 bg-themed rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
                         <input type="text" id="task-category" list="skill-suggestions" required placeholder="Skill / Category (e.g., Fitness)" class="w-full p-3 bg-themed rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
@@ -363,19 +484,19 @@
                                 <label class="block text-sm font-medium mb-2">Sub-quests (Checklist)</label>
                                 <div class="flex gap-2 mb-2">
                                     <input type="text" id="subtask-name" placeholder="Add a smaller step..." class="w-full p-2 bg-themed rounded-lg">
-                                    <button type="button" id="add-subtask-btn" class="bg-purple-600 hover:bg-purple-700 text-white font-bold p-2 rounded-lg transition transform hover:scale-110">+</button>
+                                    <button type="button" id="add-subtask-btn" class="bg-purple-600 hover:bg-purple-700 text-white font-bold p-2 rounded-lg transition transform hover:scale-110 btn-interactive">+</button>
                                 </div>
                                 <div id="subtasks-container" class="space-y-2 max-h-28 overflow-y-auto scrollable-content pr-2"></div>
                             </div>
                         </div>
 
-                        <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition duration-300 transform hover:scale-105">Embark on Quest</button>
+                        <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition duration-300 transform hover:scale-105 btn-interactive">Embark on Quest</button>
                     </form>
                 </div>
                 <div id="bounty-board-card" class="card p-6 min-h-[200px]"></div>
                 <div class="card p-6 min-h-[200px]">
                     <div class="flex justify-between items-center card-header pb-3">
-                        <h2 class="text-2xl font-semibold">Active Quests</h2>
+                        <h2 class="text-2xl">Active Quests</h2>
                     </div>
                      <div class="flex flex-col sm:flex-row gap-2 my-4">
                          <div class="flex-grow">
@@ -403,21 +524,21 @@
             <!-- Right Column (Rewards & System) -->
             <div id="mobile-panel-shop" class="space-y-8 lg:col-span-1 hidden lg:block">
                 <div class="card p-6 flex flex-col h-full min-h-[500px]">
-                    <h2 class="text-2xl font-semibold mb-4 card-header pb-3">Freedom Shop</h2>
+                    <h2 class="text-2xl mb-4 card-header pb-3">Freedom Shop</h2>
                     
                     <div id="black-market-section"></div>
 
-                    <h3 class="text-lg font-semibold mb-2 mt-4 border-t border-themed pt-4">Your Permanent Rewards</h3>
+                    <h3 class="text-lg mb-2 mt-4 border-t border-themed pt-4">Your Permanent Rewards</h3>
                     <div id="shop-list" class="space-y-3 mb-6 scrollable-content pr-2 max-h-48 overflow-y-auto"></div>
                     
-                    <h3 class="text-lg font-semibold mb-2 mt-auto">Add New Permanent Reward</h3>
+                    <h3 class="text-lg mb-2 mt-auto">Add New Permanent Reward</h3>
                     <form id="add-reward-form" class="space-y-2">
                         <div>
                             <input type="text" id="reward-name" required placeholder="Reward name" class="w-full p-2 bg-themed rounded-lg">
                         </div>
                         <div class="flex gap-2">
                            <input type="number" id="reward-cost" min="1" required placeholder="Cost" class="w-full p-2 bg-themed rounded-lg">
-                           <button type="submit" class="bg-purple-600 hover:bg-purple-700 text-white font-bold p-2 rounded-lg transition transform hover:scale-110">+</button>
+                           <button type="submit" class="bg-purple-600 hover:bg-purple-700 text-white font-bold p-2 rounded-lg transition transform hover:scale-110 btn-interactive">+</button>
                         </div>
                     </form>
                 </div>
@@ -428,21 +549,15 @@
     <!-- Mobile Tab Bar -->
     <div id="mobile-tab-bar" class="lg:hidden fixed bottom-0 left-0 right-0 h-16 card flex justify-around items-center border-t-2 z-40">
         <button data-tab="dashboard" class="mobile-tab flex flex-col items-center justify-center w-full h-full">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-            </svg>
+            <i data-lucide="user-2" class="w-6 h-6"></i>
             <span class="text-xs">Dashboard</span>
         </button>
         <button data-tab="quests" class="mobile-tab flex flex-col items-center justify-center w-full h-full active">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
+            <i data-lucide="scroll-text" class="w-6 h-6"></i>
             <span class="text-xs">Quests</span>
         </button>
         <button data-tab="shop" class="mobile-tab flex flex-col items-center justify-center w-full h-full">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-            </svg>
+            <i data-lucide="store" class="w-6 h-6"></i>
             <span class="text-xs">Shop</span>
         </button>
     </div>
@@ -585,6 +700,29 @@
                             { id: 'hj2', name: 'Master of the Mundane', desc: "Reach Level 10 in the 'Chores' skill.", condition: state => state.skills['Chores'] && state.skills['Chores'].level >= 10, reward: { type: 'passive_daily_xp_bonus', value: 0.1 }, rewardDesc: "Daily quests are worth 10% more XP." },
                             { id: 'hj3', name: "The Dragon's Hoard", desc: 'Earn a total of 2,500 Gold.', condition: state => state.player.stats.totalGoldEarned >= 2500, reward: { type: 'avatar_unlock', value: 'gold_dragon' }, rewardDesc: "Unlock the Gold Dragon avatar." },
                             { id: 'hj4', name: "The Sage's Wisdom", desc: 'Complete 100 quests.', condition: state => state.player.stats.questsCompleted >= 100, reward: { type: 'passive_xp_bonus', value: 0.02 }, rewardDesc: "+2% to all XP gains." },
+                            // Expansion starts here
+                            { id: 'hj5', name: 'Adept Adventurer', desc: 'Reach Player Level 10.', condition: state => state.player.level >= 10, reward: { type: 'passive_xp_bonus', value: 0.01 }, rewardDesc: "+1% to all XP gains." },
+                            { id: 'hj6', name: 'The Resilient', desc: 'Maintain a 7-day streak.', condition: state => state.player.streak >= 7, reward: { type: 'title_unlock', value: 'the Resilient' }, rewardDesc: "Unlock the title: 'the Resilient'." },
+                            { id: 'hj7', name: 'Treasure Hunter', desc: 'Earn a total of 5,000 Gold.', condition: state => state.player.stats.totalGoldEarned >= 5000, reward: { type: 'passive_gold_bonus', value: 0.02 }, rewardDesc: "+2% to all Gold gains." },
+                            { id: 'hj8', name: 'Skill Virtuoso', desc: "Reach Level 15 in any skill.", condition: state => Object.values(state.skills).some(s => s.level >= 15), reward: { type: 'theme_unlock', value: 'emerald' }, rewardDesc: "Unlock the 'Emerald' theme." },
+                            { id: 'hj9', name: 'Quest Conqueror', desc: 'Complete 250 quests.', condition: state => state.player.stats.questsCompleted >= 250, reward: { type: 'passive_xp_bonus', value: 0.02 }, rewardDesc: "+2% to all XP gains." },
+                            { id: 'hj10', name: 'Veteran Warrior', desc: 'Reach Player Level 20.', condition: state => state.player.level >= 20, reward: { type: 'avatar_unlock', value: 'warrior' }, rewardDesc: "Unlock the Warrior avatar." },
+                            { id: 'hj11', name: 'The Unstoppable', desc: 'Maintain a 30-day streak.', condition: state => state.player.streak >= 30, reward: { type: 'title_unlock', value: 'the Unstoppable' }, rewardDesc: "Unlock the title: 'the Unstoppable'." },
+                            { id: 'hj12', name: 'Midas Touch', desc: 'Earn a total of 10,000 Gold.', condition: state => state.player.stats.totalGoldEarned >= 10000, reward: { type: 'theme_unlock', value: 'ruby' }, rewardDesc: "Unlock the 'Ruby' theme." },
+                            { id: 'hj13', name: 'Big Spender', desc: 'Spend 5,000 Gold in the shops.', condition: state => state.player.stats.totalGoldSpent >= 5000, reward: { type: 'passive_gold_bonus', value: 0.03 }, rewardDesc: "+3% to all Gold gains." },
+                            { id: 'hj14', name: 'Quest Grandmaster', desc: 'Complete 500 quests.', condition: state => state.player.stats.questsCompleted >= 500, reward: { type: 'passive_xp_bonus', value: 0.03 }, rewardDesc: "+3% to all XP gains." },
+                            { id: 'hj15', name: 'Archmage', desc: 'Reach Player Level 30.', condition: state => state.player.level >= 30, reward: { type: 'avatar_unlock', value: 'sorcerer' }, rewardDesc: "Unlock the Sorcerer avatar." },
+                            { id: 'hj16', name: 'Jack of All Trades', desc: "Reach Level 10 in 4 different skills.", condition: state => Object.values(state.skills).filter(s => s.level >= 10).length >= 4, reward: { type: 'title_unlock', value: 'Jack of All Trades' }, rewardDesc: "Unlock the title: 'Jack of All Trades'." },
+                            { id: 'hj17', name: 'Wealthy Baron', desc: 'Earn a total of 25,000 Gold.', condition: state => state.player.stats.totalGoldEarned >= 25000, reward: { type: 'passive_gold_bonus', value: 0.04 }, rewardDesc: "+4% to all Gold gains." },
+                            { id: 'hj18', name: 'Bounty Hunter', desc: 'Complete 10 Bounties.', condition: state => Object.keys(state.bounties.completedToday).length >= 10, reward: { type: 'title_unlock', value: 'Bounty Hunter' }, rewardDesc: "Unlock the title: 'Bounty Hunter'." },
+                            { id: 'hj19', name: 'Master of Fate', desc: 'Reach Player Level 50.', condition: state => state.player.level >= 50, reward: { type: 'avatar_unlock', value: 'master' }, rewardDesc: "Unlock the Master avatar." },
+                            { id: 'hj20', name: 'Living Legend', desc: 'Complete 1,000 quests.', condition: state => state.player.stats.questsCompleted >= 1000, reward: { type: 'passive_xp_bonus', value: 0.05 }, rewardDesc: "+5% to all XP gains." },
+                            { id: 'hj21', name: 'Unbroken Will', desc: 'Maintain a 60-day streak.', condition: state => state.player.streak >= 60, reward: { type: 'passive_gold_bonus', value: 0.05 }, rewardDesc: "+5% to all Gold gains." },
+                            { id: 'hj22', name: 'Gold Baron', desc: 'Earn a total of 50,000 Gold.', condition: state => state.player.stats.totalGoldEarned >= 50000, reward: { type: 'title_unlock', value: 'Gold Baron' }, rewardDesc: "Unlock the title: 'Gold Baron'." },
+                            { id: 'hj23', name: 'True Hero', desc: 'Reach Player Level 75.', condition: state => state.player.level >= 75, reward: { type: 'passive_xp_bonus', value: 0.05 }, rewardDesc: "+5% to all XP gains." },
+                            { id: 'hj24', name: 'Polymath', desc: "Reach Level 25 in any skill.", condition: state => Object.values(state.skills).some(s => s.level >= 25), reward: { type: 'passive_gold_bonus', value: 0.05 }, rewardDesc: "+5% to all Gold gains." },
+                            { id: 'hj25', name: 'Quest Master', desc: 'Complete 2,000 quests.', condition: state => state.player.stats.questsCompleted >= 2000, reward: { type: 'title_unlock', value: 'Quest Master' }, rewardDesc: "Unlock the title: 'Quest Master'." },
+                            { id: 'hj26', name: 'The Legend', desc: 'Reach Player Level 100.', condition: state => state.player.level >= 100, reward: { type: 'avatar_unlock', value: 'legend' }, rewardDesc: "Unlock the Legend avatar & title." },
                         ],
                         bountyPool: [
                             { id: 'b1', name: 'Fitness Fanatic', desc: "Complete 3 'Fitness' quests today.", reward: { xp: 100, gold: 50 }, condition: (state) => state.completedTasks.filter(t => t.category === 'Fitness' && new Date(t.completedAt).toDateString() === new Date().toDateString()).length >= 3 },
@@ -597,32 +735,37 @@
                             { id: 'b5', name: 'Streak Keeper', desc: 'Maintain your daily streak.', reward: { xp: 50, gold: 20 }, condition: (state) => state.player.streak > 1 && state.player.lastCompletedDate === new Date().toDateString() }
                         ],
                         blackMarketItems: [
-                            { id: 'item1', name: 'Potion of Swift Learning', desc: "+25% XP from 'Learning' quests for 24 hours.", cost: 250, duration: 24, effect: { type: 'xp_boost', category: 'Learning', value: 0.25 }, icon: '🧪' },
-                            { id: 'item2', name: 'Elixir of Strength', desc: "+25% XP from 'Fitness' quests for 24 hours.", cost: 250, duration: 24, effect: { type: 'xp_boost', category: 'Fitness', value: 0.25 }, icon: '🧪' },
-                            { id: 'item4', name: 'Amulet of Prosperity', desc: 'Permanently gain +1 Gold from every quest.', cost: 1500, duration: Infinity, effect: { type: 'gold_flat_bonus', value: 1 }, icon: '💎' },
+                            { id: 'item1', name: 'Potion of Swift Learning', desc: "+25% XP from 'Learning' quests for 24 hours.", cost: 250, duration: 24, effect: { type: 'xp_boost', category: 'Learning', value: 0.25 }, icon: 'flask-conical' },
+                            { id: 'item2', name: 'Elixir of Strength', desc: "+25% XP from 'Fitness' quests for 24 hours.", cost: 250, duration: 24, effect: { type: 'xp_boost', category: 'Fitness', value: 0.25 }, icon: 'flask-conical' },
+                            { id: 'item4', name: 'Amulet of Prosperity', desc: 'Permanently gain +1 Gold from every quest.', cost: 1500, duration: Infinity, effect: { type: 'gold_flat_bonus', value: 1 }, icon: 'gem' },
                         ],
                         avatars: {
                             knight: `data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIGZpbGw9IiMxRjI5MzkiLz48cmVjdCB4PSI4IiB5PSIyIiB3aWR0aD0iOCIgaGVpZ2h0PSIyIiBmaWxsPSIjQzhDNUM2Ii8+PHJlY3QgeD0iOCIgeT0iNCIgd2lkdGg9IjgiIGhlaWdodD0iNiIgZmlsbD0iIzUzNUU1QiIvPjxyZWN0IHg9IjEwIiB5PSI2IiB3aWR0aD0iNCIgaGVpZ2h0PSIyIiBmaWxsPSIjM0Q0NTUwIi8+PHJlY3QgeD0iNiIgeT0iMTAiIHdpZHRoPSIxMiIgaGVpZ2h0PSI0IiBmaWxsPSIjNTM1RUY1Ii8+PHJlY3QgeD0iNiIgeT0iMTQiIHdpZHRoPSIzIiBoZWlnaHQ9IjYiIGZpbGw9IiM1MzVFRjUiLz48cmVjdCB4PSIxNSIgeT0iMTQiIHdpZHRoPSIzIiBoZWlnaHQ9IjYiIGZpbGw9IiM1MzVFRjUiLz48cmVjdCB4PSI5IiB5PSIxNCIgd2lkdGg9IjYiIGhlaWdodD0iNiIgZmlsbD0iIzQ2NTE1OSIvPjxyZWN0IHg9IjYiIHk9IjIwIiB3aWR0aD0iMyIgaGVpZ2h0PSIyIiBmaWxsPSIjM0Q0NTUwIi8+PHJlY3QgeD0iMTUiIHk9IjIwIiB3aWR0aD0iMyIgaGVpZ2h0PSIyIiBmaWxsPSIjM0Q0NTUwIi8+PC9zdmc+`,
                             mage: `data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIGZpbGw9IiMxRjI5MzkiLz48cGF0aCBkPSJNNiAyTDEyIDZMMTggMkwxMiAxMFYyWiIgZmlsbD0iIzRGNzVFOSIvPjxyZWN0IHg9IjgiIHk9IjEwIiB3aWR0aD0iOCIgaGVpZ2h0PSIyIiBmaWxsPSIjRkZENUI4Ii8+PHJlY3QgeD0iNiIgeT0iMTIiIHdpZHRoPSIxMiIgaGVpZ2h0PSI4IiBmaWxsPSIjNEY3NUU5Ii8+PHJlY3QgeD0iOCIgeT0iMjAiIHdpZHRoPSI4IiBoZWlnaHQ9IjIiIGZpbGw9IiM0QzUwMzkiLz48L3N2Zz4=`,
                             archer: `data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIGZpbGw9IiMxRjI5MzkiLz48cmVjdCB4PSI4IiB5PSIyIiB3aWR0aD0iOCIgaGVpZ2h0PSIyIiBmaWxsPSIjRkY1RDc4Ii8+PHJlY3QgeD0iOCIgeT0iNCIgd2lkdGg9IjgiIGhlaWdodD0iNiIgZmlsbD0iIzJFN0Q0QyIvPjxyZWN0IHg9IjEwIiB5PSI2IiB3aWR0aD0iNCIgaGVpZ2h0PSIyIiBmaWxsPSIjMkM2QTQwIi8+PHJlY3QgeD0iNiIgeT0iMTAiIHdpZHRoPSIxMiIgaGVpZ2h0PSI4IiBmaWxsPSIjMkU3RDRDIi8+PHJlY3QgeD0iNiIgeT0iMTgiIHdpZHRoPSIzIiBoZWlnaHQ9IjQiIGZpbGw9IiM2QjQyMkYiLz48cmVjdCB4PSIxNSIgeT0iMTgiIHdpZHRoPSIzIiBoZWlnaHQ9IjQiIGZpbGw9IiM2QjQyMkYiLz48cmVjdCB4PSI5IiB5PSIxOCIgd2lkdGg9IjYiIGhlaWdodD0iNCIgZmlsbD0iIzVCMzgzMSIvPjwvc3ZnPg==`,
-                            gold_dragon: `data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIGZpbGw9IiMxRjI5MzkiLz48cGF0aCBkPSJNMyAxMkw4IDdMMTMgMTJMOCAxN1oiIGZpbGw9IiNGQUMxNUMiLz48cGF0aCBkPSJNMTMgMTJMMTggN0wyMyAxMkwxOCAxN1oiIGZpbGw9IiNGOUExMkIiLz48cmVjdCB4PSI4IiB5PSIyIiB3aWR0aD0iOCIgaGVpZ2h0PSI1IiBmaWxsPSIjRkFDMTVDIi8+PC9zdmc+`
+                            gold_dragon: `data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIGZpbGw9IiMxRjI5MzkiLz48cGF0aCBkPSJNMyAxMkw4IDdMMTMgMTJMOCAxN1oiIGZpbGw9IiNGQUMxNUMiLz48cGF0aCBkPSJNMTMgMTJMMTggN0wyMyAxMkwxOCAxN1oiIGZpbGw9IiNGOUExMkIiLz48cmVjdCB4PSI4IiB5PSIyIiB3aWR0aD0iOCIgaGVpZ2h0PSI1IiBmaWxsPSIjRkFDMTVDIi8+PC9zdmc+`,
+                            warrior: `data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIGZpbGw9IiMxRjI5MzkiLz48cmVjdCB4PSI5IiB5PSIyIiB3aWR0aD0iNiIgaGVpZ2h0PSI0IiBmaWxsPSIjRTUzOTM1Ii8+PHJlY3QgeD0iNyIgeT0iNiIgd2lkdGg9IjEwIiBoZWlnaHQ9IjQiIGZpbGw9IiM3ODk2QUIiLz48cmVjdCB4PSI3IiB5PSIxMCIgd2lkdGg9IjEwIiBoZWlnaHQ9IjEwIiBmaWxsPSIjNDU1ODE1Ii8+PHJlY3QgeD0iNCIgeT0iMTIiIHdpZHRoPSIzIiBoZWlnaHQ9IjYiIGZpbGw9IiM3ODk2QUIiLz48cmVjdCB4PSIxNyIgeT0iMTIiIHdpZHRoPSIzIiBoZWlnaHQ9IjYiIGZpbGw9IiM3ODk2QUIiLz48L3N2Zz4=`,
+                            sorcerer: `data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIGZpbGw9IiMxRjI5MzkiLz48cGF0aCBkPSJNMTIgMkw2IDdMMTIgMTJMNyA3TDEyIDE3TDcgMTJMMTIgMkwxNyA3TDEyIDEyTDE3IDE3TDEyIDEyTDE4IDdaIiBmaWxsPSIjOEI1Q0Y2Ii8+PHJlY3QgeD0iNyIgeT0iMTgiIHdpZHRoPSIxMCIgaGVpZ2h0PSI0IiBmaWxsPSIjOEI1Q0Y2Ii8+PC9zdmc+`,
+                            master: `data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIGZpbGw9IiMxRjI5MzkiLz48cmVjdCB4PSI4IiB5PSIyIiB3aWR0aD0iOCIgaGVpZ2h0PSIyIiBmaWxsPSIjRkZGRkZGIi8+PHJlY3QgeD0iOCIgeT0iNCIgd2lkdGg9IjgiIGhlaWdodD0iNiIgZmlsbD0iI0Y4Q0M0RiIvPjxyZWN0IHg9IjEwIiB5PSI2IiB3aWR0aD0iNCIgaGVpZ2h0PSIyIiBmaWxsPSIjRDhBRjdGIi8+PHJlY3QgeD0iNiIgeT0iMTAiIHdpZHRoPSIxMiIgaGVpZ2h0PSI4IiBmaWxsPSIjRkZGRkZGIi8+PHJlY3QgeD0iNiIgeT0iMTgiIHdpZHRoPSIxMiIgaGVpZ2h0PSI0IiBmaWxsPSIjRDhBRjdGIi8+PC9zdmc+`,
+                            legend: `data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIGZpbGw9IiMxRjI5MzkiLz48cGF0aCBkPSJNMTEgMkw4IDhIMTRMMTEgMloiIGZpbGw9IiNGQUMxNUMiLz48cmVjdCB4PSI4IiB5PSI4IiB3aWR0aD0iNiIgaGVpZ2h0PSIxNCIgZmlsbD0iI0Y5QTExQiIvPjxyZWN0IHg9IjMiIHk9IjEwIiB3aWR0aD0iNSIgaGVpZ2h0PSI4IiBmaWxsPSIjRkFDMTVDIi8+PHJlY3QgeD0iMTYiIHk9IjEwIiB3aWR0aD0iNSIgaGVpZ2h0PSI4IiBmaWxsPSIjRkFDMTVDIi8+PC9zdmc+`
                         },
                     };
                 },
 
                 getDefaultState() {
                     return JSON.parse(JSON.stringify({ // Deep copy to prevent mutation
-                        character: { name: 'Hero', avatar: 'knight', class: 'knight' },
+                        character: { name: 'Hero', avatar: 'knight', class: 'knight', title: null },
                         player: { 
                             level: 1, xp: 0, gold: 0, streak: 0, lastCompletedDate: null, activeBuffs: [],
                             stats: { 
                                 questsCompleted: 0, totalGoldEarned: 0, totalXpGained: 0, 
-                                questsCompletedToday: 0, goldEarnedToday: 0
+                                questsCompletedToday: 0, goldEarnedToday: 0, totalGoldSpent: 0
                             } 
                         },
                         tasks: [], shop: [], skills: {}, unlockedAchievements: {},
                         completedTasks: [], unlockedJourneyChapters: {},
                         bounties: { active: [], completedToday: {}, lastDate: null },
+                        unlockedThemes: ['dark', 'light', 'forest', 'sapphire', 'amethyst'],
                         editing: { type: null, id: null },
                         settings: { theme: 'dark', sound: true },
                         uiSettings: {
@@ -635,7 +778,7 @@
 
                 cacheDOM() {
                     this.dom = {
-                        playerXpBar: document.getElementById('player-xp-bar'), playerXpText: document.getElementById('player-xp-text'), playerGold: document.getElementById('player-gold'), playerStreak: document.getElementById('player-streak'), addTaskForm: document.getElementById('add-task-form'), addRewardForm: document.getElementById('add-reward-form'), xpSlider: document.getElementById('task-xp'), xpSliderValue: document.getElementById('task-xp-value'), skillSuggestions: document.getElementById('skill-suggestions'), taskList: document.getElementById('task-list'), shopList: document.getElementById('shop-list'), skillsList: document.getElementById('skills-list'), heroJourneyList: document.getElementById('hero-journey-list'), playerProfileStats: document.getElementById('player-profile-stats'), achievementsList: document.getElementById('achievements-list'), toastContainer: document.getElementById('toast-container'), confirmationModal: document.getElementById('confirmationModal'), editModal: document.getElementById('editModal'), questLogModal: document.getElementById('questLogModal'), questLogBtn: document.getElementById('quest-log-btn'), statsChartCanvas: document.getElementById('stats-chart'), settingsBtn: document.getElementById('settings-btn'), settingsModal: document.getElementById('settingsModal'), avatarDisplay: document.getElementById('avatar-display'), characterNameInput: document.getElementById('character-name'), characterClass: document.getElementById('character-class'), playerLevel: document.getElementById('player-level'),
+                        playerXpBar: document.getElementById('player-xp-bar'), playerXpText: document.getElementById('player-xp-text'), playerGold: document.getElementById('player-gold'), playerStreak: document.getElementById('player-streak'), addTaskForm: document.getElementById('add-task-form'), addRewardForm: document.getElementById('add-reward-form'), xpSlider: document.getElementById('task-xp'), xpSliderValue: document.getElementById('task-xp-value'), skillSuggestions: document.getElementById('skill-suggestions'), taskList: document.getElementById('task-list'), shopList: document.getElementById('shop-list'), skillsList: document.getElementById('skills-list'), heroJourneyList: document.getElementById('hero-journey-list'), playerProfileStats: document.getElementById('player-profile-stats'), achievementsList: document.getElementById('achievements-list'), toastContainer: document.getElementById('toast-container'), confirmationModal: document.getElementById('confirmationModal'), editModal: document.getElementById('editModal'), questLogModal: document.getElementById('questLogModal'), questLogBtn: document.getElementById('quest-log-btn'), statsChartCanvas: document.getElementById('stats-chart'), settingsBtn: document.getElementById('settings-btn'), settingsModal: document.getElementById('settingsModal'), avatarDisplay: document.getElementById('avatar-display'), characterNameInput: document.getElementById('character-name'), characterClass: document.getElementById('character-class'), characterTitle: document.getElementById('character-title'), playerLevel: document.getElementById('player-level'),
                         playerCard: document.getElementById('player-card'),
                         activeBuffsContainer: document.getElementById('active-buffs-container'),
                         blackMarketSection: document.getElementById('black-market-section'),
@@ -768,7 +911,8 @@
                         bounties: { ...defaultState.bounties, ...(firestoreData.bounties || {}) },
                         settings: { ...defaultState.settings, ...(firestoreData.settings || {}) },
                         uiSettings: { ...defaultState.uiSettings, ...(firestoreData.uiSettings || {}) },
-                        unlockedJourneyChapters: { ...defaultState.unlockedJourneyChapters, ...(firestoreData.unlockedJourneyChapters || {}) }
+                        unlockedJourneyChapters: { ...defaultState.unlockedJourneyChapters, ...(firestoreData.unlockedJourneyChapters || {}) },
+                        unlockedThemes: firestoreData.unlockedThemes || defaultState.unlockedThemes,
                     };
                 },
 
@@ -794,6 +938,23 @@
                 saveStateDebounced() {
                     if (this.saveTimeout) clearTimeout(this.saveTimeout);
                     this.saveTimeout = setTimeout(() => this.saveStateToFirestore(), 1500);
+                },
+
+                getPassiveBonuses() {
+                    let xpBonus = 0;
+                    let goldBonus = 0;
+                    Object.keys(this.state.unlockedJourneyChapters).forEach(chapterId => {
+                        const chapter = this.config.heroJourney.find(c => c.id === chapterId);
+                        if (chapter && chapter.reward) {
+                            if (chapter.reward.type === 'passive_xp_bonus') {
+                                xpBonus += chapter.reward.value;
+                            }
+                            if (chapter.reward.type === 'passive_gold_bonus') {
+                                goldBonus += chapter.reward.value;
+                            }
+                        }
+                    });
+                    return { xpBonus, goldBonus };
                 },
 
                 // --- Core Game Logic ---
@@ -885,13 +1046,9 @@
                     }
 
                     // --- Apply Hero's Journey Bonuses ---
-                    const journey = this.config.heroJourney;
-                    if (this.state.unlockedJourneyChapters[journey[0].id]) { // +1% Gold
-                         goldGained *= (1 + journey[0].reward.value);
-                    }
-                    if (this.state.unlockedJourneyChapters[journey[3].id]) { // +2% XP
-                         finalXp *= (1 + journey[3].reward.value);
-                    }
+                    const passiveBonuses = this.getPassiveBonuses();
+                    if (passiveBonuses.xpBonus > 0) finalXp *= (1 + passiveBonuses.xpBonus);
+                    if (passiveBonuses.goldBonus > 0) goldGained *= (1 + passiveBonuses.goldBonus);
 
 
                     finalXp = Math.round(finalXp * this.config.priorityMultiplier[task.priority || 'medium']);
@@ -1118,7 +1275,6 @@
                     this.renderSkills();
                     this.renderShop();
                     this.renderPlayerProfile();
-                    this.renderAchievements();
                     this.renderBountyBoard();
                     this.renderStatsChart();
                     this.renderCategoryDonutChart();
@@ -1127,6 +1283,7 @@
                     this.renderProductivityHeatmap();
                     this.renderCharacter();
                     this.renderActiveBuffs();
+                    lucide.createIcons();
                     this.saveStateDebounced();
                 },
 
@@ -1137,7 +1294,7 @@
                     this.dom.playerXpText.textContent = `${Math.round(xp)} / ${requiredXp}`;
                     this.dom.playerXpBar.style.width = `${(xp / requiredXp) * 100}%`;
                     this.dom.playerGold.textContent = `${Math.round(gold)} G`;
-                    this.dom.playerStreak.textContent = `🔥 ${streak}`;
+                    this.dom.playerStreak.textContent = `${streak}`;
                 },
                 
                 renderTasks() { 
@@ -1172,7 +1329,7 @@
                 renderQuestList(container, list) {
                     if (list.length === 0) {
                         const emptyState = `<div class="empty-state-container text-sm text-gray-400">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                            <i data-lucide="scroll" class="w-12 h-12 mb-2"></i>
                             <h3 class="font-semibold mt-2">No Quests Here</h3>
                             <p class="mt-1">Add a new quest to begin your adventure.</p>
                         </div>`;
@@ -1193,19 +1350,19 @@
                         const canComplete = !task.subtasks || task.subtasks.length === 0 || task.subtasks.every(st => st.completed);
                         
                         return `
-                        <div data-task-id="${task.id}" class="bg-themed p-3 rounded-lg flex flex-col items-stretch ${task.isNew ? 'anim-fade-in' : ''} ${isCompletedToday ? 'opacity-50' : ''} priority-${task.priority || 'medium'}">
+                        <div data-task-id="${task.id}" class="card !transform-none p-3 rounded-lg flex flex-col items-stretch ${task.isNew ? 'anim-fade-in' : ''} ${isCompletedToday ? 'opacity-50' : ''} priority-${task.priority || 'medium'}">
                             <div class="flex justify-between items-start">
                                 <div>
-                                    <p class="font-semibold ${isCompletedToday ? 'line-through' : ''}">${task.name}</p>
+                                    <h4 class="font-semibold ${isCompletedToday ? 'line-through' : ''}">${task.name}</h4>
                                     <div class="mt-1">
                                          <span class="text-xs font-bold text-accent-primary bg-blue-500/10 px-2 py-1 rounded-full">${task.xp} XP</span>
                                     </div>
                                 </div>
                                 <div class="flex gap-1 flex-shrink-0 pl-2">
-                                    <button data-id="${task.id}" data-action="edit-task" class="p-2 rounded-full hover:bg-blue-500/20"><svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="pointer-events:none;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L15.232 5.232z"></path></svg></button>
-                                    <button data-id="${task.id}" data-action="delete-task" class="p-2 rounded-full hover:bg-red-500/20"><svg class="w-4 h-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="pointer-events:none;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
-                                    <button data-id="${task.id}" data-action="complete-task" class="bg-green-600 hover:bg-green-700 text-white font-bold p-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed" ${isCompletedToday || !canComplete ? 'disabled' : ''}>
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="pointer-events:none;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                                    <button data-id="${task.id}" data-action="edit-task" class="p-2 rounded-full hover:bg-blue-500/20"><i data-lucide="pencil" class="w-4 h-4 text-blue-400" style="pointer-events:none;"></i></button>
+                                    <button data-id="${task.id}" data-action="delete-task" class="p-2 rounded-full hover:bg-red-500/20"><i data-lucide="trash-2" class="w-4 h-4 text-red-400" style="pointer-events:none;"></i></button>
+                                    <button data-id="${task.id}" data-action="complete-task" class="btn-interactive bg-green-600 hover:bg-green-700 text-white font-bold p-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed" ${isCompletedToday || !canComplete ? 'disabled' : ''}>
+                                        <i data-lucide="check" class="w-4 h-4" style="pointer-events:none;"></i>
                                     </button>
                                 </div>
                             </div>
@@ -1265,19 +1422,22 @@
                     });
                 },
                 
-                checkAchievements() {
-                    this.config.achievements.forEach(ach => {
-                        if (!this.state.unlockedAchievements[ach.id] && ach.condition(this.state)) {
-                            this.state.unlockedAchievements[ach.id] = new Date().toLocaleDateString();
-                            this.showToast("🏆 Achievement Unlocked", `${ach.name}`, "levelup");
-                            this.audio.playAchievement();
-                        }
-                    });
-                },
                  checkHeroJourney() {
                     this.config.heroJourney.forEach(chapter => {
                         if (!this.state.unlockedJourneyChapters[chapter.id] && chapter.condition(this.state)) {
                             this.state.unlockedJourneyChapters[chapter.id] = new Date().toLocaleDateString();
+                            if (chapter.reward.type === 'title_unlock') {
+                                this.state.character.title = chapter.reward.value;
+                            }
+                            if (chapter.reward.type === 'theme_unlock') {
+                                if (!this.state.unlockedThemes.includes(chapter.reward.value)) {
+                                    this.state.unlockedThemes.push(chapter.reward.value);
+                                }
+                            }
+                            // Special case for the final chapter
+                            if(chapter.id === 'hj26') {
+                                this.state.character.title = 'The Legend';
+                            }
                             this.showToast("✨ Hero's Journey", `Chapter Unlocked: ${chapter.name}`, "levelup");
                             this.audio.playAchievement();
                         }
@@ -1286,38 +1446,40 @@
                 
                 renderCharacter() {
                     this.dom.characterNameInput.value = this.state.character.name;
+                    this.dom.characterTitle.textContent = this.state.character.title || '';
                     this.dom.avatarDisplay.style.backgroundImage = `url(${this.config.avatars[this.state.character.avatar]})`;
                     this.dom.characterClass.textContent = this.state.character.class;
                 },
                 
                 renderSettings() {
                     const soundOn = this.state.settings.sound;
+                    const themeOptions = this.state.unlockedThemes.map(theme => 
+                        `<option value="${theme}" ${this.state.settings.theme === theme ? 'selected' : ''}>${theme.charAt(0).toUpperCase() + theme.slice(1)}</option>`
+                    ).join('');
+
                     this.dom.settingsModal.innerHTML = `
                     <div class="card p-6 rounded-lg shadow-2xl max-w-md w-full mx-4 anim-fade-in">
                         <div class="flex justify-between items-center card-header pb-3 mb-4">
-                            <h3 class="text-2xl font-bold">Settings</h3>
+                            <h2 class="text-2xl">Settings</h2>
                             <button id="settingsCloseBtn" class="p-2 rounded-full hover:bg-themed">&times;</button>
                         </div>
                         <div class="space-y-4">
                             <div>
                                 <label for="theme-select" class="block text-sm font-medium mb-2">Theme</label>
                                 <select id="theme-select" class="w-full p-2 bg-themed rounded-lg">
-                                    <option value="dark">Dark Nebula</option>
-                                    <option value="light">Arcade Light</option>
-                                    <option value="forest">Forest Grove</option>
+                                    ${themeOptions}
                                 </select>
                             </div>
                             <div class="flex justify-between items-center bg-themed p-2 rounded-lg">
                                 <label for="sound-toggle" class="text-sm font-medium">Sound Effects</label>
-                                <button id="sound-toggle" class="px-3 py-1 text-sm rounded-md ${soundOn ? 'bg-green-600' : 'bg-gray-600'}">${soundOn ? 'On' : 'Off'}</button>
+                                <button id="sound-toggle" class="px-3 py-1 text-sm rounded-md ${soundOn ? 'bg-green-600' : 'bg-gray-600'} btn-interactive">${soundOn ? 'On' : 'Off'}</button>
                             </div>
                             <div class="flex gap-2">
-                                <button id="export-data-btn" class="w-full bg-gray-600 hover:bg-gray-700 text-white font-semibold py-2 px-4 rounded-lg transition">Export Data</button>
-                                <button id="reset-data-btn" class="w-full bg-red-800 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-lg transition">Reset Data</button>
+                                <button id="export-data-btn" class="w-full bg-gray-600 hover:bg-gray-700 text-white font-semibold py-2 px-4 rounded-lg transition btn-interactive">Export Data</button>
+                                <button id="reset-data-btn" class="w-full bg-red-800 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-lg transition btn-interactive">Reset Data</button>
                             </div>
                         </div>
                     </div>`;
-                    document.getElementById('theme-select').value = this.state.settings.theme;
                     document.getElementById('theme-select').addEventListener('change', e => this.handleThemeChange(e));
                     document.getElementById('export-data-btn').addEventListener('click', () => this.exportDataToCSV());
                     document.getElementById('reset-data-btn').addEventListener('click', () => this.handleResetData());
@@ -1335,9 +1497,11 @@
 
                 renderAvatarModal() {
                     const availableAvatars = {...this.config.avatars};
-                    if (!this.state.unlockedJourneyChapters['hj3']) {
-                        delete availableAvatars.gold_dragon;
-                    }
+                    if (!this.state.unlockedJourneyChapters['hj3']) delete availableAvatars.gold_dragon;
+                    if (!this.state.unlockedJourneyChapters['hj10']) delete availableAvatars.warrior;
+                    if (!this.state.unlockedJourneyChapters['hj15']) delete availableAvatars.sorcerer;
+                    if (!this.state.unlockedJourneyChapters['hj19']) delete availableAvatars.master;
+                    if (!this.state.unlockedJourneyChapters['hj26']) delete availableAvatars.legend;
 
                     const content = Object.keys(availableAvatars).map(key => {
                         const classBonus = this.config.classBonuses[key] || { description: 'A legendary hero.'};
@@ -1354,7 +1518,7 @@
                     this.dom.avatarModal.innerHTML = `
                     <div class="card p-6 rounded-lg shadow-2xl max-w-lg w-full mx-4 anim-fade-in">
                         <div class="flex justify-between items-center card-header pb-3 mb-4">
-                            <h3 class="text-2xl font-bold">Choose Class</h3>
+                            <h2 class="text-2xl">Choose Class</h2>
                             <button id="avatarCloseBtn" class="p-2 rounded-full hover:bg-themed">&times;</button>
                         </div>
                         <div class="grid grid-cols-3 gap-4">${content}</div>
@@ -1467,7 +1631,7 @@
                 renderSkills() {
                     if (Object.keys(this.state.skills).length === 0) {
                         this.dom.skillsList.innerHTML = `<div class="empty-state-container text-sm text-gray-400">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>
+                            <i data-lucide="book-open" class="w-12 h-12 mb-2"></i>
                             <h3 class="font-semibold">No Skills Yet</h3><p>Complete quests to discover and level up skills!</p></div>`;
                         return;
                     }
@@ -1478,7 +1642,7 @@
                         <div class="skill-item p-2 rounded-lg border border-transparent transition-colors">
                             <div class="flex justify-between items-baseline mb-1">
                                 <div class="flex items-center gap-2">
-                                    <span class="font-semibold">${name}</span>
+                                    <h4 class="font-semibold text-base">${name}</h4>
                                 </div>
                                 <span class="text-sm font-bold">Lvl ${skill.level}</span>
                             </div>
@@ -1490,27 +1654,39 @@
                     this.dom.skillSuggestions.innerHTML = Object.keys(this.state.skills).map(skill => `<option value="${skill}"></option>`).join('');
                 },
                 renderHeroJourney() {
-                    this.dom.heroJourneyList.innerHTML = this.config.heroJourney.map(chapter => {
+                    let nextChapterFound = false;
+                    const journeyHtml = this.config.heroJourney.map(chapter => {
                         const isUnlocked = !!this.state.unlockedJourneyChapters[chapter.id];
+                        let status = '';
+                        if (isUnlocked) {
+                            status = 'completed';
+                        } else if (!nextChapterFound) {
+                            status = 'next';
+                            nextChapterFound = true;
+                        } else {
+                            status = 'locked';
+                        }
+
                         return `
-                        <div class="flex items-start gap-4 achievement ${isUnlocked ? 'unlocked' : 'locked'}">
-                            <div class="achievement-icon pt-1">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10.868 2.884c.321-.772 1.415-.772 1.736 0l1.291 3.118c.16.386.524.654.945.698l3.437.5c1.033.15 1.448 1.433.704 2.162l-2.487 2.424c-.294.286-.426.703-.359 1.118l.586 3.422c.177 1.031-1.012 1.815-1.922 1.321l-3.072-1.615a1.25 1.25 0 00-1.164 0L6.34 16.24c-.91.494-2.098-.29-1.922-1.321l.586-3.422c.067-.415-.065-.832-.359-1.118l-2.487-2.424c-.744-.729-.329-2.012.704-2.162l3.437-.5c.421-.044.785-.312.945-.698l1.291-3.118z" clip-rule="evenodd" /></svg>
+                        <div class="journey-item ${status}">
+                            <div class="journey-icon">
+                                <i data-lucide="award" class="w-4 h-4"></i>
                             </div>
-                            <div class="achievement-text flex-1">
-                                <p class="font-semibold">${chapter.name}</p>
+                            <div class="journey-content">
+                                <h4 class="font-semibold text-base">${chapter.name}</h4>
                                 <p class="text-sm">${chapter.desc}</p>
                                 ${isUnlocked ? `<p class="text-xs text-green-400 font-bold">Reward: ${chapter.rewardDesc}</p>` : ''}
                             </div>
                         </div>`;
                     }).join('');
+                    this.dom.heroJourneyList.innerHTML = `<div class="relative">${journeyHtml}</div>`;
                 },
 
                  renderShop() {
                     this.renderBlackMarket();
                     if (this.state.shop.length === 0) {
                         this.dom.shopList.innerHTML = `<div class="empty-state-container text-sm text-gray-400">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1"><path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" /></svg>
+                            <i data-lucide="store" class="w-12 h-12 mb-2"></i>
                             <h3 class="font-semibold">Shop is Empty</h3><p>Add your own rewards to the shop below.</p></div>`;
                         return;
                     }
@@ -1518,15 +1694,15 @@
                         <div data-reward-id="${item.id}" class="bg-themed p-2 rounded-lg flex justify-between items-center anim-fade-in">
                             <div><p>${item.name}</p><p class="text-sm gold-text font-semibold">${item.cost} G</p></div>
                             <div class="flex items-center gap-1">
-                                <button data-id="${item.id}" data-action="edit-reward" class="p-2 rounded-full hover:bg-blue-500/20"><svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L15.232 5.232z"></path></svg></button>
-                                <button data-id="${item.id}" data-action="delete-reward" class="p-2 rounded-full hover:bg-red-500/20"><svg class="w-4 h-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
-                                <button data-id="${item.id}" data-action="buy-reward" class="bg-yellow-500 hover:bg-yellow-600 text-gray-900 font-bold p-2 rounded-lg" ${this.state.player.gold < item.cost ? 'disabled' : ''}><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M3 1a1 1 0 000 2h1.22l.305 1.222a.997.997 0 00.01.042l1.358 5.43-.893.892C3.74 11.846 4.632 14 6.414 14H15a1 1 0 000-2H6.414l1-1H14a1 1 0 00.894-.553l3-6A1 1 0 0017 3H6.28l-.31-1.243A1 1 0 005 1H3zM16 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM6.5 18a1.5 1.5 0 100-3 1.5 1.5 0 000 3z"></path></svg></button>
+                                <button data-id="${item.id}" data-action="edit-reward" class="p-2 rounded-full hover:bg-blue-500/20"><i data-lucide="pencil" class="w-4 h-4 text-blue-400"></i></button>
+                                <button data-id="${item.id}" data-action="delete-reward" class="p-2 rounded-full hover:bg-red-500/20"><i data-lucide="trash-2" class="w-4 h-4 text-red-400"></i></button>
+                                <button data-id="${item.id}" data-action="buy-reward" class="btn-interactive bg-yellow-500 hover:bg-yellow-600 text-gray-900 font-bold p-2 rounded-lg" ${this.state.player.gold < item.cost ? 'disabled' : ''}><i data-lucide="shopping-cart" class="w-5 h-5"></i></button>
                             </div>
                         </div>`).join('');
                 },
 
                 renderBlackMarket() {
-                    let html = `<h3 class="text-lg font-semibold mb-2">Black Market</h3>`;
+                    let html = `<h3 class="text-lg mb-2">Black Market</h3>`;
                     html += this.config.blackMarketItems.map(item => {
                         const hasBuff = this.state.player.activeBuffs.some(b => b.id === item.id);
                         const canAfford = this.state.player.gold >= item.cost;
@@ -1534,11 +1710,11 @@
                         return `<div class="bg-themed p-3 rounded-lg mb-2 border-l-4 border-red-500">
                             <div class="flex justify-between items-center">
                                 <div>
-                                    <p class="font-semibold">${item.icon} ${item.name}</p>
+                                    <h4 class="font-semibold text-base flex items-center gap-2"><i data-lucide="${item.icon}" class="w-4 h-4"></i> ${item.name}</h4>
                                     <p class="text-xs text-text-secondary">${item.desc}</p>
                                     <p class="text-sm gold-text font-semibold">${item.cost} G</p>
                                 </div>
-                                <button data-action="buy-black-market-item" data-id="${item.id}" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-3 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed" ${isDisabled ? 'disabled' : ''}>
+                                <button data-action="buy-black-market-item" data-id="${item.id}" class="btn-interactive bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-3 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed" ${isDisabled ? 'disabled' : ''}>
                                     ${hasBuff ? 'Owned' : 'Buy'}
                                 </button>
                             </div>
@@ -1548,7 +1724,7 @@
                 },
                 
                 renderBountyBoard() {
-                    let html = `<h2 class="text-2xl font-semibold mb-4 card-header pb-3">Bounty Board</h2>`;
+                    let html = `<h2 class="text-2xl mb-4 card-header pb-3">Bounty Board</h2>`;
                     if (this.state.bounties.active.length === 0) {
                         html += `<div class="empty-state-container text-sm text-gray-400"><p>No bounties today. Check back tomorrow!</p></div>`;
                     } else {
@@ -1558,7 +1734,7 @@
                             if (!bounty) return '';
                             const isCompleted = this.state.bounties.completedToday[bountyId];
                             return `<div class="bg-themed p-3 rounded-lg border-l-4 border-yellow-500 ${isCompleted ? 'opacity-50' : ''}">
-                                <p class="font-semibold">${bounty.name}</p>
+                                <h4 class="font-semibold text-base">${bounty.name}</h4>
                                 <p class="text-sm text-text-secondary">${bounty.desc}</p>
                                 <p class="text-sm mt-1">Reward: <span class="text-accent-primary font-semibold">${bounty.reward.xp} XP</span> &bull; <span class="gold-text font-semibold">${bounty.reward.gold} G</span></p>
                                 ${isCompleted ? '<p class="text-xs text-green-400 font-bold mt-1">COMPLETED</p>' : ''}
@@ -1578,7 +1754,7 @@
                         const expiresIn = buff.expiresAt ? `Expires: ${new Date(buff.expiresAt).toLocaleTimeString()}` : 'Permanent';
 
                         return `<div class="tooltip text-xl">
-                            ${item.icon}
+                            <i data-lucide="${item.icon}" class="w-5 h-5"></i>
                             <span class="tooltiptext">${item.name}<br>${expiresIn}</span>
                         </div>`;
                     }).join('');
@@ -1588,48 +1764,23 @@
                     const { questsCompleted, totalGoldEarned, totalXpGained, totalGoldSpent, rewardsClaimed } = this.state.player.stats;
                     this.dom.playerProfileStats.innerHTML = `
                         <div class="grid grid-cols-1 gap-1">
-                           ${this.createStatItem('quests', 'Quests Completed', questsCompleted)}
-                           ${this.createStatItem('xp', 'Total XP Gained', `${Math.round(totalXpGained)} XP`)}
-                           ${this.createStatItem('gold', 'Total Gold Earned', `<span class="gold-text">${Math.round(totalGoldEarned)} G</span>`)}
-                           ${this.createStatItem('spent', 'Total Gold Spent', `${totalGoldSpent || 0} G</span>`)}
-                           ${this.createStatItem('chest', 'Rewards Claimed', rewardsClaimed || 0)}
+                           ${this.createStatItem('list-checks', 'Quests Completed', questsCompleted)}
+                           ${this.createStatItem('star', 'Total XP Gained', `${Math.round(totalXpGained)} XP`)}
+                           ${this.createStatItem('circle-dollar-sign', 'Total Gold Earned', `<span class="gold-text">${Math.round(totalGoldEarned)} G</span>`)}
+                           ${this.createStatItem('wallet', 'Total Gold Spent', `${totalGoldSpent || 0} G</span>`)}
+                           ${this.createStatItem('treasure-chest', 'Rewards Claimed', rewardsClaimed || 0)}
                         </div>`;
                 },
 
-                createStatItem(iconType, tooltipText, value) {
-                    const icons = {
-                        quests: `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A1 1 0 0111.293 2.707l1.414 1.414a1 1 0 01.293.707V6h2a2 2 0 012 2v6a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd" /></svg>`,
-                        xp: `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-accent-primary" viewBox="0 0 20 20" fill="currentColor"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>`,
-                        gold: `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 gold-text" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM6.878 7.878A1 1 0 018.293 7.293L10 9.586l1.707-2.293a1 1 0 111.415 1.414l-2.414 3.243a1 1 0 01-1.414 0L6.878 9.293a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>`,
-                        spent: `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor"><path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z" /><path fill-rule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm3 0a1 1 0 011-1h1a1 1 0 110 2H8a1 1 0 01-1-1z" clip-rule="evenodd" /></svg>`,
-                        chest: `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor"><path d="M5 8a2 2 0 012-2h6a2 2 0 012 2v1H5V8z" /><path fill-rule="evenodd" d="M3 10a2 2 0 012-2h10a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5zm3 2a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1z" clip-rule="evenodd" /></svg>`,
-                    };
+                createStatItem(iconName, tooltipText, value) {
                     return `
                         <div class="flex items-center gap-3 p-2 rounded-md hover:bg-white/5 transition-colors">
                             <div class="tooltip">
-                                ${icons[iconType]}
+                                <i data-lucide="${iconName}" class="w-5 h-5 text-gray-400"></i>
                                 <span class="tooltiptext">${tooltipText}</span>
                             </div>
                             <span class="font-bold text-right flex-grow">${value}</span>
                         </div>`;
-                },
-                
-                renderAchievements() {
-                    this.dom.achievementsList.innerHTML = this.config.achievements.map(ach => {
-                        const unlockedDate = this.state.unlockedAchievements[ach.id];
-                        const isUnlocked = !!unlockedDate;
-                        return `
-                        <div class="flex items-start gap-4 achievement ${isUnlocked ? 'unlocked' : 'locked'}">
-                            <div class="achievement-icon pt-1">
-                                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M11.25 2.269a.75.75 0 00-1.5 0l-1.33 4.1a.75.75 0 01-.704.518H3.32a.75.75 0 00-.583 1.233l3.29 2.795a.75.75 0 01-.27 1.35l-1.33 4.1a.75.75 0 001.07 1.07l3.29-2.795a.75.75 0 01.972 0l3.29 2.795a.75.75 0 001.07-1.07l-1.33-4.1a.75.75 0 01-.27-1.35l3.29-2.795a.75.75 0 00-.583-1.233H12.28a.75.75 0 01-.704-.518l-1.33-4.1z" clip-rule="evenodd"></path></svg>
-                            </div>
-                            <div class="achievement-text">
-                                <p class="font-semibold">${ach.name}</p>
-                                <p class="text-sm">${ach.desc}</p>
-                                ${isUnlocked ? `<p class="text-xs gold-text">Unlocked: ${unlockedDate}</p>` : ''}
-                            </div>
-                        </div>`;
-                    }).join('') || `<div class="empty-state-container text-sm text-gray-400">...</div>`;
                 },
                 
                 handleThemeChange(e) { this.state.settings.theme = e.target.value; this.applyTheme(); this.saveStateDebounced(); },
@@ -1693,7 +1844,7 @@
                         case 'questLogModal': this.renderQuestLog(); break;
                         case 'confirmationModal': {
                             const [title, message, onConfirm] = args;
-                            modal.innerHTML = `<div class="card p-6 rounded-lg shadow-2xl max-w-sm w-full mx-4 anim-fade-in"><h3 class="text-xl font-bold mb-4">${title || 'Confirm'}</h3><p class="text-secondary mb-6">${message || 'Are you sure?'}</p><div class="flex justify-end gap-4"><button id="modalCancelBtn" class="bg-gray-600 hover:bg-gray-700 font-semibold py-2 px-4 rounded-lg">Cancel</button><button id="modalConfirmBtn" class="bg-red-600 hover:bg-red-700 font-semibold py-2 px-4 rounded-lg">Confirm</button></div></div>`;
+                            modal.innerHTML = `<div class="card p-6 rounded-lg shadow-2xl max-w-sm w-full mx-4 anim-fade-in"><h2 class="text-xl mb-4">${title || 'Confirm'}</h2><p class="text-secondary mb-6">${message || 'Are you sure?'}</p><div class="flex justify-end gap-4"><button id="modalCancelBtn" class="bg-gray-600 hover:bg-gray-700 font-semibold py-2 px-4 rounded-lg btn-interactive">Cancel</button><button id="modalConfirmBtn" class="bg-red-600 hover:bg-red-700 font-semibold py-2 px-4 rounded-lg btn-interactive">Confirm</button></div></div>`;
                             modal.querySelector('#modalConfirmBtn').onclick = () => onConfirm();
                             break;
                         }
@@ -1719,10 +1870,10 @@
                         item = this.state.shop.find(r => r.id === id);
                         formHtml = `<div><label for="edit-name" class="block text-sm mb-1">Reward Name</label><input type="text" id="edit-name" value="${item.name}" required class="${commonClasses}"></div><div><label for="edit-cost" class="block text-sm mb-1">Gold Cost</label><input type="number" id="edit-cost" value="${item.cost}" min="1" required class="${commonClasses}"></div>`;
                     }
-                    formHtml += `<div class="flex justify-end gap-4 mt-6"><button type="button" id="editCancelBtn" class="bg-gray-600 hover:bg-gray-700 font-semibold py-2 px-4 rounded-lg">Cancel</button><button type="submit" class="bg-blue-600 hover:bg-blue-700 font-semibold py-2 px-4 rounded-lg">Save</button></div>`;
+                    formHtml += `<div class="flex justify-end gap-4 mt-6"><button type="button" id="editCancelBtn" class="bg-gray-600 hover:bg-gray-700 font-semibold py-2 px-4 rounded-lg btn-interactive">Cancel</button><button type="submit" class="bg-blue-600 hover:bg-blue-700 font-semibold py-2 px-4 rounded-lg btn-interactive">Save</button></div>`;
                     
                     const modal = document.getElementById('editModal');
-                    modal.innerHTML = `<div class="card p-6 rounded-lg shadow-2xl max-w-md w-full mx-4 anim-fade-in"><h3 class="text-2xl font-bold mb-4">Edit Item</h3><form id="edit-form" class="space-y-4">${formHtml}</form></div>`;
+                    modal.innerHTML = `<div class="card p-6 rounded-lg shadow-2xl max-w-md w-full mx-4 anim-fade-in"><h2 class="text-2xl mb-4">Edit Item</h2><form id="edit-form" class="space-y-4">${formHtml}</form></div>`;
                     this.showModal('editModal');
                 },
 
@@ -1938,7 +2089,7 @@
                         return `
                         <div class="bg-themed p-3 rounded-md">
                             <div>
-                                <p class="font-semibold">${task.name} <span class="text-xs text-gray-400">- ${task.category}</span></p>
+                                <h4 class="font-semibold">${task.name} <span class="text-xs text-gray-400">- ${task.category}</span></h4>
                                 <p class="text-xs text-gray-500">Completed: ${new Date(task.completedAt).toLocaleString()}</p>
                             </div>
                             ${rewardDetailsHtml}
@@ -1948,7 +2099,7 @@
                     this.dom.questLogModal.innerHTML = `
                     <div class="card p-6 rounded-lg shadow-2xl max-w-2xl w-full mx-4 anim-fade-in flex flex-col">
                         <div class="flex justify-between items-center card-header pb-3 mb-4">
-                            <h3 class="text-2xl font-bold">Completed Quest Log</h3>
+                            <h2 class="text-2xl">Completed Quest Log</h2>
                             <button id="questLogCloseBtn" class="p-2 rounded-full hover:bg-themed">&times;</button>
                         </div>
                         <div class="space-y-2 overflow-y-auto max-h-[60vh] pr-2 scrollable-content">${content}</div>
